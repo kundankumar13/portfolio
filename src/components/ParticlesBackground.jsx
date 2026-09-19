@@ -1,83 +1,88 @@
 import { useEffect, useRef } from "react";
 
 export default function ParticlesBackground() {
-    const canvasRef = useRef(null);
+  const canvasRef = useRef(null);
 
-    useEffect(() => {
-        const canvas = canvasRef.current;
-        const ctx = canvas.getContext("2d");
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d", { alpha: true });
+    if (!ctx) return;
 
-        let particles = [];
-        const particleCount = 50;
-        const colors = ["rgba(255,255,255,0.7)"];
+    let particles = [];
+    const isMobile = typeof window !== "undefined" && window.innerWidth < 768;
+    const particleCount = isMobile ? 20 : 45;
+    const color = "rgba(255, 255, 255, 0.45)";
 
-        class Particle {
-            constructor() {
-                this.x = Math.random() * canvas.width;
-                this.y = Math.random() * canvas.height;
-                this.radius = Math.random() * 2 + 1;
-                this.color = colors[Math.floor(Math.random() * colors.length)];
-                this.speedX = (Math.random() - 0.5) * 0.5;
-                this.speedY = (Math.random() - 0.5) * 0.5;
-            }
+    class Particle {
+      constructor() {
+        this.reset();
+      }
 
-            draw() {
-                ctx.beginPath();
-                ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
-                ctx.shadowBlur = 10;
-                ctx.shadowColor = this.color;
-                ctx.fillStyle = this.color;
-                ctx.fill();
-            }
+      reset() {
+        this.x = Math.random() * canvas.width;
+        this.y = Math.random() * canvas.height;
+        this.radius = Math.random() * 1.5 + 0.5;
+        this.speedX = (Math.random() - 0.5) * 0.4;
+        this.speedY = (Math.random() - 0.5) * 0.4;
+      }
 
-            update() {
-                this.x += this.speedX;
-                this.y += this.speedY;
+      draw() {
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+        ctx.fillStyle = color;
+        ctx.fill();
+      }
 
-                
-                if (this.x < 0) this.x = canvas.width;
-                if (this.x > canvas.width) this.x = 0;
-                if (this.y < 0) this.y = canvas.height;
-                if (this.y > canvas.height) this.y = 0;
+      update() {
+        this.x += this.speedX;
+        this.y += this.speedY;
 
-                this.draw();
-            }
-        }
+        if (this.x < 0) this.x = canvas.width;
+        if (this.x > canvas.width) this.x = 0;
+        if (this.y < 0) this.y = canvas.height;
+        if (this.y > canvas.height) this.y = 0;
 
-        
-        function createParticles() {
-            particles = []; 
-            for (let i = 0; i < particleCount; i++) {
-                particles.push(new Particle());
-            }
-        }
+        this.draw();
+      }
+    }
 
-        function handleResize() {
-            canvas.width = window.innerWidth;
-            canvas.height = window.innerHeight;
-            createParticles(); 
-        }
+    function createParticles() {
+      particles = [];
+      for (let i = 0; i < particleCount; i++) {
+        particles.push(new Particle());
+      }
+    }
 
-        window.addEventListener("resize", handleResize);
-        handleResize(); 
-        let animationId;
-        function animate() {
-            ctx.clearRect(0, 0, canvas.width, canvas.height); 
-            particles.forEach((p) => p.update());
-            animationId = requestAnimationFrame(animate);
-        }
-        animate(); 
+    function handleResize() {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+      createParticles();
+    }
 
-        return () => {
-            cancelAnimationFrame(animationId);
-            window.removeEventListener("resize", handleResize);
-        };
-    }, []);
+    window.addEventListener("resize", handleResize, { passive: true });
+    handleResize();
 
-    return (
-        <canvas
-            ref={canvasRef}
-            className="absolute top-0 left-0 w-full h-full pointer-events-none z-0"
-        ></canvas>
-    );
+    let animationId;
+    function animate() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      for (let i = 0; i < particles.length; i++) {
+        particles[i].update();
+      }
+      animationId = requestAnimationFrame(animate);
+    }
+    animationId = requestAnimationFrame(animate);
+
+    return () => {
+      cancelAnimationFrame(animationId);
+      window.removeEventListener("resize", handleResize);
+    };
+  }, []);
+
+  return (
+    <canvas
+      ref={canvasRef}
+      className="absolute top-0 left-0 w-full h-full pointer-events-none z-0"
+    />
+  );
 }

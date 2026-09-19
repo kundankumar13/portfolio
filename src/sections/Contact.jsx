@@ -3,13 +3,16 @@ import { motion } from "framer-motion";
 import emailjs from "@emailjs/browser";
 import ParticlesBackground from "../components/ParticlesBackground";
 import Astra from "../assets/Astra.png";
+import { usePortfolio } from "../context/PortfolioContext";
 
 // Environment variables
-const SERVICE_ID = import.meta.env.VITE_SERVICE_ID;
-const TEMPLATE_ID = import.meta.env.VITE_TEMPLATE_ID;
-const PUBLIC_KEY = import.meta.env.VITE_PUBLIC_KEY;
+const SERVICE_ID = import.meta.env.VITE_SERVICE_ID || "service_114fawh";
+const TEMPLATE_ID = import.meta.env.VITE_TEMPLATE_ID || "template_4yjctfh";
+const PUBLIC_KEY = import.meta.env.VITE_PUBLIC_KEY || "2t3kKC_x77fDy3kWJ";
 
 export default function Contact() {
+  const { addMessage } = usePortfolio();
+
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -21,22 +24,19 @@ export default function Contact() {
   const [errors, setErrors] = useState({});
   const [status, setStatus] = useState("");
 
-  
   const handleChange = (e) => {
     const { name, value } = e.target;
     
-    
-    if (name === "budget" && value && !/^\d+$/.test(value)) return;
+    // Allow numbers, $, commas, k, and dashes in budget
+    if (name === "budget" && value && !/^[\d$,\s.kK+-]+$/.test(value)) return;
 
     setFormData((prev) => ({ ...prev, [name]: value }));
-    
     
     if (errors[name]) {
       setErrors((prev) => ({ ...prev, [name]: "" }));
     }
   };
 
-  
   const validateForm = () => {
     const newErrors = {};
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -50,69 +50,79 @@ export default function Contact() {
     }
 
     if (!formData.service) newErrors.service = "Please select a service";
-    
     if (!formData.idea.trim()) newErrors.idea = "Please explain your idea";
-
-    
-    if (formData.service && formData.service !== "Other" && !formData.budget.trim()) {
-      newErrors.budget = "Budget is required";
-    }
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
-  
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!validateForm()) return;
     setStatus("sending");
 
-    
     const templateParams = {
       from_name: formData.name.trim(),
       reply_to: formData.email.trim(),
       service_needed: formData.service,
-      budget: formData.service === "Other" ? "N/A" : formData.budget,
+      budget: formData.budget.trim() || "N/A",
       message: formData.idea.trim(),
     };
 
-    try {
-      await emailjs.send(SERVICE_ID, TEMPLATE_ID, templateParams, PUBLIC_KEY);
-      setStatus("success");
-      
-      
-      setFormData({
-        name: "",
-        email: "",
-        service: "",
-        budget: "",
-        idea: "",
+    // 1. Immediately save to Admin Panel inbox
+    if (addMessage) {
+      addMessage({
+        name: formData.name.trim(),
+        email: formData.email.trim(),
+        service: formData.service,
+        budget: formData.budget.trim() || "N/A",
+        message: formData.idea.trim()
       });
-    } catch (err) {
-      console.error("Emailjs integration error:", err);
-      setStatus("error");
     }
+
+    // 2. Attempt sending via EmailJS
+    try {
+      if (SERVICE_ID && TEMPLATE_ID && PUBLIC_KEY) {
+        await emailjs.send(SERVICE_ID, TEMPLATE_ID, templateParams, PUBLIC_KEY);
+      }
+      setStatus("success");
+    } catch (err) {
+      console.warn("EmailJS notification issue (saved to admin inbox):", err);
+      // Still show success since it's saved in Admin inbox
+      setStatus("success");
+    }
+
+    setFormData({
+      name: "",
+      email: "",
+      service: "",
+      budget: "",
+      idea: "",
+    });
   };
 
   return (
-    <section id="contact" className="w-full min-h-screen relative bg-black overflow-hidden text-white py-20 px-6 md:px-20 flex flex-col md:flex-row items-center gap-10">
-      <ParticlesBackground />
+    <section id="contact" className="w-full min-h-screen relative bg-black overflow-hidden text-white py-16 sm:py-24 px-4 sm:px-8 md:px-12 lg:px-16 flex items-center justify-center">
+      {/* Ambient background glow */}
+      <div className="absolute inset-0 pointer-events-none">
+        <div className="absolute top-1/4 left-10 w-[350px] h-[350px] rounded-full bg-gradient-to-r from-[#302b63] via-[#00bf8f] to-[#1cd8d2] opacity-15 blur-[140px] animate-pulse" />
+        <div className="absolute bottom-10 right-10 w-[380px] h-[380px] rounded-full bg-gradient-to-r from-[#1cd8d2] via-[#00bf8f] to-[#302b63] opacity-15 blur-[140px] animate-pulse delay-500" />
+      </div>
 
-      <div className="relative z-10 w-full flex flex-col md:flex-row items-center gap-10">
+      <div className="relative z-10 w-full max-w-7xl mx-auto flex flex-col lg:flex-row items-center gap-10 lg:gap-12">
         
         {/* Left Side - Image Section */}
         <motion.div
-          className="w-full md:w-1/2 flex justify-center"
-          initial={{ opacity: 0, x: -50 }}
-          whileInView={{ opacity: 1, x: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.6 }}
+          className="w-full lg:w-1/2 flex justify-center"
+          initial={{ opacity: 0, x: -50, scale: 0.95 }}
+          whileInView={{ opacity: 1, x: 0, scale: 1 }}
+          viewport={{ once: false, amount: 0.2 }}
+          transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
         >
           <motion.img
             src={Astra}
             alt="Astra Avatar"
-            className="w-72 md:w-[500px] rounded-2xl shadow-2xl object-cover"
+            className="w-52 sm:w-64 md:w-80 lg:w-[460px] rounded-2xl shadow-2xl object-cover"
             animate={{ y: [0, -12, 0] }}
             transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
           />
@@ -120,15 +130,30 @@ export default function Contact() {
 
         {/* Right Side - Form Section */}
         <motion.div 
-          className="w-full md:w-1/2 bg-white/5 p-8 rounded-2xl shadow-xl border border-white/10 backdrop-blur-sm"
-          initial={{ opacity: 0, x: 50 }}
-          whileInView={{ opacity: 1, x: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.6 }}
+          className="w-full lg:w-1/2 bg-white/5 p-6 sm:p-8 rounded-2xl sm:rounded-3xl shadow-2xl border border-white/10 backdrop-blur-md"
+          initial={{ opacity: 0, x: 50, scale: 0.95 }}
+          whileInView={{ opacity: 1, x: 0, scale: 1 }}
+          viewport={{ once: false, amount: 0.2 }}
+          transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
         >
-          <h2 className="text-3xl font-bold mb-6 tracking-wide">
+          <motion.h2 
+            className="text-2xl sm:text-3xl md:text-4xl font-extrabold mb-2 tracking-wide bg-clip-text text-transparent bg-gradient-to-r from-[#1cd8d2] via-[#00bf8f] to-white"
+            initial={{ opacity: 0, y: -15 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: false, amount: 0.2 }}
+            transition={{ duration: 0.5, delay: 0.1 }}
+          >
             Let's Work Together
-          </h2>
+          </motion.h2>
+          <motion.p
+            className="text-sm text-gray-300 mb-6"
+            initial={{ opacity: 0, y: 10 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: false, amount: 0.2 }}
+            transition={{ duration: 0.5, delay: 0.15 }}
+          >
+            Have a project in mind, a question, or an opportunity? Reach out directly!
+          </motion.p>
           
           <form className="flex flex-col gap-5" onSubmit={handleSubmit} noValidate>
             

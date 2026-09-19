@@ -5,81 +5,70 @@ import m2 from "../assets/m2.PNG";
 import w1 from "../assets/w1.PNG";
 import w2 from "../assets/w2.PNG";
 import ParticlesBackground from "../components/ParticlesBackground";
-
-
-const testimonials = [
-  {
-    name: "Yash Sahu",
-    role: "Software Engineer at HCL Technologies",
-    review:
-      "Gaurav is a visionary developer. His attention to detail and creativity blew us away. Our project was a massive success because of him.",
-    image: m1,
-  },
-  {
-    name: "Heather Forster",
-    role: "UI/UX Designer at PixelWorks",
-    review:
-      "Working with Gaurav was an absolute pleasure. He brings design and code together like magic. Highly recommend him!",
-    image: w1,
-  },
-  {
-    name: "Amy Jacobsan",
-    role: "Tech Manager at CodeEmpire",
-    review:
-      "From concept to execution, Gaurav handled everything flawlessly. His work ethic and innovation are unmatched.",
-    image: m2,
-  },
-  {
-    name: "Carry Smith",
-    role: "CTO at Innovate Labs",
-    review:
-      "Gaurav transformed our outdated platform into something modern and powerful. His skills are world-class.",
-    image: w2,
-  },
-];
-
-
-
-
-
+import { usePortfolio } from "../context/PortfolioContext";
 
 export default function Testimonials(){
+  const { data } = usePortfolio();
+  const testimonials = data.testimonials && data.testimonials.length > 0 ? data.testimonials : [];
+
   return(
+    <section id="testimonials" className="relative min-h-screen bg-black text-white flex flex-col items-center justify-center px-4 sm:px-6 md:px-10 py-16 sm:py-24 overflow-hidden">
+      {/* Ambient background glows */}
+      <div className="absolute inset-0 pointer-events-none">
+        <div className="absolute top-1/3 -left-20 w-[350px] h-[350px] rounded-full bg-gradient-to-r from-[#302b63] via-[#00bf8f] to-[#1cd8d2] opacity-15 blur-[130px] animate-pulse" />
+        <div className="absolute bottom-1/4 -right-20 w-[350px] h-[350px] rounded-full bg-gradient-to-r from-[#1cd8d2] via-[#00bf8f] to-[#302b63] opacity-15 blur-[130px] animate-pulse delay-700" />
+      </div>
 
-    <section id="testimonials" className="relative min-h-screen bg-black text-white flex flex-col items-center justify-between px-6 py-20">
-      <motion.h2 className="text-4xl font-bold mb-12 text-center"
-      initial={{opacity : 0 , y : -30}}
-      whileInView={{opacity : 1 , y : 0}}
-      viewport={{once: true}}
-      transition={{duration : 0.6}}
+      <motion.h2
+        className="text-3xl sm:text-4xl md:text-5xl font-bold text-center bg-clip-text text-transparent bg-gradient-to-r from-[#1cd8d2] via-[#00bf8f] to-white z-10"
+        initial={{ opacity: 0, y: -30 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: false, amount: 0.2 }}
+        transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
       >
-        <ParticlesBackground/>
-
         What People Say
-
       </motion.h2>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-10 max-w-6xl w-full">
-      {testimonials.map((t , i) =>(
-        <motion.div 
-        key={t.name +1}
-        initial={{opacity : 0 , y : 50}}
-        whileInView={{opacity : 1 , y : 0}}
-        transition={{duration : 0.5 , delay : i*0.2}}
-        viewport={{once : true}}
-        className="bg-white/10 backdrop-blur-lg border border-white/20 rounded-2xl p-6 flex flex-col items-center text-center 
-        transform transition duration-500 hover:scale-105 hover:-rotate-1">
-            <img src={t.image} alt={t.name} className="w-20 h-20 rounded-full border-2 border-white/40 mb-4 object-cover" 
-            loading="lazy"
-            />
+      <motion.p
+        className="mt-2 mb-12 sm:mb-16 text-gray-300 text-center text-sm sm:text-base max-w-md z-10 px-4"
+        initial={{ opacity: 0, y: 15 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: false, amount: 0.2 }}
+        transition={{ duration: 0.6, delay: 0.1, ease: [0.22, 1, 0.36, 1] }}
+      >
+        Real feedback from clients, mentors, and collaborative partners
+      </motion.p>
 
-            <p className="text-gray-200 italic mt-2 mb-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8 max-w-6xl w-full z-10">
+      {testimonials.map((t, i) => (
+        <motion.div 
+          key={t.name + i}
+          initial={{ opacity: 0, y: 50, scale: 0.92 }}
+          whileInView={{ opacity: 1, y: 0, scale: 1 }}
+          transition={{ duration: 0.6, delay: i * 0.12, ease: [0.22, 1, 0.36, 1] }}
+          viewport={{ once: false, amount: 0.2 }}
+          whileHover={{ y: -6, scale: 1.02, borderColor: "rgba(28,216,210,0.5)" }}
+          className="bg-white/5 backdrop-blur-lg border border-white/10 rounded-2xl p-6 sm:p-8 flex flex-col items-center text-center shadow-xl transition-colors duration-300"
+        >
+            <div className="relative mb-4">
+              <img 
+                src={t.image} 
+                alt={t.name} 
+                className="w-20 h-20 rounded-full border-2 border-[#1cd8d2]/50 object-cover shadow-lg" 
+                loading="lazy"
+              />
+              <span className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-gradient-to-tr from-[#1cd8d2] to-[#00bf8f] text-black text-xs font-bold flex items-center justify-center">
+                ★
+              </span>
+            </div>
+
+            <p className="text-gray-200 italic mt-2 mb-4 text-sm sm:text-base leading-relaxed">
               "{t.review}"
             </p>
-            <h3 className="text-lg font-semibold">
+            <h3 className="text-lg font-bold text-white tracking-wide">
               {t.name}
             </h3>
-            <p className="text-sm text-gray-400">
+            <p className="text-xs sm:text-sm text-[#1cd8d2] font-medium mt-0.5">
               {t.role}
             </p>
           </motion.div>

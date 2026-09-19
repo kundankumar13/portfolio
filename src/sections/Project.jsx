@@ -1,171 +1,162 @@
-import { useEffect, useMemo, useRef, useState } from "react"
-import img1 from "../assets/img1.JPG"
-import img2 from "../assets/img2.JPG"
-import img3 from "../assets/img3.JPG"
-import photo1 from "../assets/photo1.JPG"
-import photo2 from "../assets/photo2.PNG"
-import photo3 from "../assets/photo3.png"
-import { motion, AnimatePresence, useMotionValueEvent, useScroll } from "framer-motion"
+import { useMemo } from "react";
+import img1 from "../assets/img1.JPG";
+import img2 from "../assets/img2.JPG";
+import img3 from "../assets/img3.JPG";
+import photo1 from "../assets/photo1.JPG";
+import photo2 from "../assets/photo2.PNG";
+import photo3 from "../assets/photo3.png";
+import { motion } from "framer-motion";
+import { usePortfolio } from "../context/PortfolioContext";
 
-const useIsMobile = (query = "(max-width : 639px)") => {
-  const [isMobile, setIsMobile] = useState(
-    typeof window !== "undefined" && window.matchMedia(query).matches
-  )
-
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    const mql = window.matchMedia(query);
-    const handler = (e) => setIsMobile(e.matches);
-
-    mql.addEventListener("change", handler);
-    setIsMobile(mql.matches);
-    return () => mql.removeEventListener("change", handler);
-  }, [query])
-
-  return isMobile;
-}
+const DEFAULT_PROJECTS = [
+  {
+    id: "p1",
+    title: "NK Studio",
+    link: "https://www.nk.studio/",
+    bgColor: "#0d4d3d",
+    description: "Creative studio platform with fluid animations and responsive portfolio showcases."
+  },
+  {
+    id: "p2",
+    title: "Gamily",
+    link: "https://gamilyapp.com/",
+    bgColor: "#3884d3",
+    description: "Next-gen gaming community hub and engagement mobile-friendly web app."
+  },
+  {
+    id: "p3",
+    title: "Hungry Tiger",
+    link: "https://www.eathungrytiger.com/",
+    bgColor: "#dc9317",
+    description: "Modern e-commerce and dining experience with fast checkout and dynamic menus."
+  }
+];
 
 export default function Projects() {
-  const isMobile = useIsMobile();
-  const sceneRef = useRef(null);
+  const { data } = usePortfolio();
 
-  const projects = useMemo(
-    () => [
-      {
-        title: "NK Studio",
-        link: "https://www.nk.studio/",
-        bgColor: "#0d4d3d",
-        image: isMobile ? photo1 : img1,
-      },
-      {
-        title: "Gamily",
-        link: "https://gamilyapp.com/",
-        bgColor: "#3884d3",
-        image: isMobile ? photo2 : img2,
-      },
-      {
-        title: "Hungry Tiger",
-        link: "https://www.eathungrytiger.com/",
-        bgColor: "#dc9317",
-        image: isMobile ? photo3 : img3,
-      },
-    ],
-    [isMobile]
-  );
+  const fallbackImages = [img1, img2, img3, photo1, photo2, photo3];
 
-  const { scrollYProgress } = useScroll({
-    target: sceneRef,
-    offset: ["start start", "end end"]
-  })
+  const projects = useMemo(() => {
+    const list = data?.projects && data.projects.length > 0 ? data.projects : DEFAULT_PROJECTS;
+    return list.map((p, idx) => {
+      let resolvedImage = null;
+      if (p.image && typeof p.image === "string" && p.image.trim() !== "") {
+        resolvedImage = p.image;
+      } else if (p.title === "NK Studio") {
+        resolvedImage = img1;
+      } else if (p.title === "Gamily") {
+        resolvedImage = img2;
+      } else if (p.title === "Hungry Tiger") {
+        resolvedImage = img3;
+      } else {
+        resolvedImage = fallbackImages[idx % fallbackImages.length];
+      }
 
-  const thresholds = projects.map((_, i) => (i + 1) / projects.length)
-  
-  const [activeIndex, setActiveIndex] = useState(0);
-
-  useMotionValueEvent(scrollYProgress, "change", (v) => {
-    const idx = thresholds.findIndex((t) => v <= t);
-    setActiveIndex(idx === -1 ? thresholds.length - 1 : idx)
-  });
-
-  const activeProject = projects[activeIndex];
+      return {
+        ...p,
+        image: resolvedImage,
+      };
+    });
+  }, [data?.projects]);
 
   return (
     <section 
       id="projects" 
-      ref={sceneRef}
-      className="relative text-white"
-      style={{
-        height: `${100 * projects.length}vh`,
-        backgroundColor: activeProject?.bgColor || "#000", 
-        transition: "background-color 400ms ease" 
-      }}
+      className="relative w-full min-h-screen bg-black text-white py-24 px-4 sm:px-6 lg:px-12 overflow-hidden"
     >
-      <div className="sticky top-0 h-screen flex flex-col items-center justify-center">
-        <h2 className={`text-4xl sm:text-5xl font-extrabold z-10 text-center tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-white via-gray-200 to-white/80 ${
-          isMobile ? "mt-4" : "mt-8"
-        }`}>Featured Projects</h2>
+      {/* Ambient background glows matching Home section */}
+      <div className="absolute inset-0 pointer-events-none">
+        <div className="absolute -top-32 -left-32 w-[70vw] sm:w-[50vw] md:w-[40vw] md:h-[40vw] max-w-[500px] max-h-[500px] rounded-full bg-gradient-to-r from-[#302b63] via-[#00bf8f] to-[#1cd8d2] opacity-30 sm:opacity-20 md:opacity-15 blur-[120px] md:blur-[150px] animate-pulse" />
+        <div className="absolute bottom-0 -right-0 w-[70vw] sm:w-[50vw] md:w-[40vw] md:h-[40vw] max-w-[500px] max-h-[500px] rounded-full bg-gradient-to-r from-[#302b63] via-[#00bf8f] to-[#1cd8d2] opacity-30 sm:opacity-20 md:opacity-15 blur-[120px] md:blur-[150px] animate-pulse delay-500" />
+      </div>
 
-        <div className={`relative w-full flex-1 flex items-center justify-center ${
-          isMobile ? "-mt-4" : ""
-        }`}>
-          {projects.map((project , idx) =>(
-            <div key={project.title}
-            className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 transition-all duration-500 ${
-              activeIndex === idx ? "opacity-100 z-20 pointer-events-auto" : "opacity-0 z-0 pointer-events-none sm:z-10"
-            }`}
-            style={{width : "85%" , maxWidth : "1200px"}}
+      <div className="relative z-10 max-w-7xl mx-auto w-full">
+        {/* Section Header */}
+        <div className="text-center max-w-3xl mx-auto mb-16 sm:mb-20">
+          <motion.h2 
+            className="text-4xl sm:text-5xl font-extrabold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-[#1cd8d2] via-[#00bf8f] to-white"
+            initial={{ opacity: 0, y: -25 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: false, amount: 0.3 }}
+            transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
+          >
+            Featured Projects
+          </motion.h2>
+
+          <motion.p 
+            className="mt-3 text-sm sm:text-base md:text-lg text-gray-300 max-w-2xl mx-auto leading-relaxed"
+            initial={{ opacity: 0, y: 15 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: false, amount: 0.3 }}
+            transition={{ duration: 0.6, delay: 0.15 }}
+          >
+            Explore my recent web applications, creative platforms, and scalable digital solutions.
+          </motion.p>
+        </div>
+
+        {/* Project Cards Grid - Compact & Sleek */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-7 max-w-6xl mx-auto">
+          {projects.map((project, idx) => (
+            <motion.div
+              key={project.id || project.title || idx}
+              initial={{ opacity: 0, y: 30, scale: 0.96 }}
+              whileInView={{ opacity: 1, y: 0, scale: 1 }}
+              viewport={{ once: false, amount: 0.2 }}
+              transition={{ duration: 0.5, delay: (idx % 3) * 0.1, ease: [0.22, 1, 0.36, 1] }}
+              whileHover={{ y: -5 }}
+              className="group relative rounded-2xl bg-white/[0.04] border border-white/10 hover:border-[#1cd8d2]/50 backdrop-blur-xl overflow-hidden shadow-xl transition-all duration-300 flex flex-col justify-between"
             >
-              <AnimatePresence mode="wait">
-
-                {activeIndex === idx && (
-                  <motion.h3 key={project.title}
-                  initial = {{opacity : 0 , y : -30}}
-                  animate = {{opacity : 1 , y : 0}}
-                  exit={{opacity : 0 , y : 30}}
-                  transition={{duration : 0.5 , ease : "easeOut"}}
-                  className={`block text-center text-[clamp(2rem,6vw,5rem)] text-white/95 sm:absolute sm:-top-20 sm:left-[35%]
-                    lg:left-[-5%] sm:mb-0 italic font-semibold ${
-                      isMobile ? "-mt-24" : ""
-                    }
-                    `}
-                    style={{
-                      zIndex : 5,
-                      textAlign : isMobile ? "center" : "left",
-                    }}
-                  >
-                    {project.title}
-                  </motion.h3>
-                )}
-
-              </AnimatePresence>
-                <div className={`relative w-full overflow-hidden bg-black/20 shadow-2xl
-                  md:shadow-[0_35px_60px_-15px_rgba(0,0,0,0.7)] ${
-                    isMobile ? "mb-6 rounded-lg"  : "mb-10 sm:mb-12 rounded-xl"
-                  }
-                  h-[62vh] sm:h-[66vh]`}
-                  style={{zIndex:10 , transition: "box-shadow 250ms ease"}}
-                  
-                  >
-                  <img src={project.image} alt={project.title}
-                  className="w-full h-full object-cover"
-                  style={{
-                    position : "relative",
-                    zIndex : 10,
-                    filter : "drop-shadow(0 16px 40px rgba(0,0,0,0.65))",
-                    transition : "filter 200ms ease",
-                  }}
-                  loading="lazy"
+              {/* Project Image Banner (Compact) */}
+              <div className="relative w-full h-44 sm:h-48 overflow-hidden bg-neutral-950">
+                {project.image ? (
+                  <img
+                    src={project.image}
+                    alt={project.title}
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                    loading="lazy"
                   />
-
-                  <div className="pointer-events-none absolute inset-0"
-                  style={{
-                    zIndex : 11,
-                    background: "linear-gradient(180deg , rgba(0,0,0,0.12) 0% , rgba(0,0,0,0) 40%)"
-                  }}
-                  >
-
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-neutral-900 to-black text-white p-4 text-center">
+                    <span className="text-lg font-bold">{project.title}</span>
                   </div>
+                )}
+                <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/20 to-transparent pointer-events-none" />
+              </div>
+
+              {/* Project Details (Compact) */}
+              <div className="p-5 flex flex-col flex-1 justify-between">
+                <div>
+                  <h3 className="text-xl font-bold text-white group-hover:text-[#1cd8d2] transition-colors">
+                    {project.title}
+                  </h3>
+                  <p className="mt-2 text-xs sm:text-sm text-gray-300 leading-relaxed line-clamp-2">
+                    {project.description || "Creative and scalable web experience crafted with high performance, fluid animations, and modern technologies."}
+                  </p>
                 </div>
 
+                {/* Card Action Link (Compact) */}
+                <div className="mt-4 pt-3.5 border-t border-white/10 flex items-center justify-between">
+                  <a
+                    href={project.link || "#"}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg font-semibold text-xs text-white bg-gradient-to-r from-[#1cd8d2] via-[#00bf8f] to-[#302b63] shadow-md hover:scale-105 hover:shadow-[#1cd8d2]/20 transition-all cursor-pointer"
+                    aria-label={`View ${project.title}`}
+                  >
+                    <span>View Project</span>
+                    <span className="text-xs">↗</span>
+                  </a>
 
-
-            </div>
+                  <span className="text-xs text-gray-500 font-mono">
+                    #{String(idx + 1).padStart(2, "0")}
+                  </span>
+                </div>
+              </div>
+            </motion.div>
           ))}
         </div>
-          <div className={`absolute ${
-            isMobile ? "bottom-20" : "bottom-10"
-          } z-30`}>
-            <a href={activeProject?.link}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-block px-7 py-3 font-semibold rounded-full bg-white text-black hover:bg-gray-200 shadow-xl hover:scale-105 transition-all"
-            aria-label={`View ${activeProject?.title}`}
-            
-            >View Project ↗</a>
-          </div>
-
-
       </div>
     </section>
-  )
+  );
 }
