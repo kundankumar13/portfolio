@@ -1,10 +1,10 @@
 
-import {motion} from "framer-motion"
-import m1 from "../assets/m1.png"
-import m2 from "../assets/m2.png"
-import w1 from "../assets/w1.png"
-import w2 from "../assets/w2.png"
-import ParticlesBackground from "../components/ParticlesBackground"
+import { motion } from "framer-motion";
+import m1 from "../assets/m1.PNG";
+import m2 from "../assets/m2.PNG";
+import w1 from "../assets/w1.PNG";
+import w2 from "../assets/w2.PNG";
+import ParticlesBackground from "../components/ParticlesBackground";
 
 
 const testimonials = [
