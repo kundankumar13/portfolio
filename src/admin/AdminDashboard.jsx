@@ -58,7 +58,7 @@ export default function AdminDashboard() {
     importData
   } = usePortfolio();
 
-  const { adminUser, logout, changePassword } = useAuth();
+  const { adminUser, logout, changePassword, isFirebaseConfigured } = useAuth();
   const navigate = useNavigate();
 
   const [activeTab, setActiveTab] = useState("overview");
@@ -305,6 +305,7 @@ export default function AdminDashboard() {
             importData={importData}
             resetToDefault={resetToDefault}
             triggerSaveNotification={triggerSaveNotification}
+            isFirebaseConfigured={isFirebaseConfigured}
           />
         )}
       </main>
@@ -2240,7 +2241,7 @@ function SocialsTab({ socials, updateSocial, triggerSaveNotification }) {
 // ==========================================
 // 9. SECURITY & SETTINGS TAB
 // ==========================================
-function SecurityTab({ adminUser, changePassword, exportData, importData, resetToDefault, triggerSaveNotification }) {
+function SecurityTab({ adminUser, changePassword, exportData, importData, resetToDefault, triggerSaveNotification, isFirebaseConfigured }) {
   const [oldPassword, setOldPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -2289,6 +2290,29 @@ function SecurityTab({ adminUser, changePassword, exportData, importData, resetT
         <p className="text-gray-400 text-sm mt-1">
           Change your admin password, create JSON backups, or restore portfolio data.
         </p>
+      </div>
+
+      {/* Cloud Sync Status Card */}
+      <div className={`p-4 rounded-xl border flex items-start gap-3 ${
+        isFirebaseConfigured
+          ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-300"
+          : "bg-amber-500/10 border-amber-500/30 text-amber-300"
+      }`}>
+        <div className="mt-0.5 text-base">
+          {isFirebaseConfigured ? "🟢" : "🟡"}
+        </div>
+        <div className="text-sm">
+          <div className="font-semibold">
+            {isFirebaseConfigured
+              ? "Cloud Sync Active (Multi-Device)"
+              : "Local Storage Mode (Single Device)"}
+          </div>
+          <p className="text-xs text-gray-300 mt-0.5">
+            {isFirebaseConfigured
+              ? "Password updates are synced directly with Firebase Firestore. Any device logging in will use the new password."
+              : "To sync your password across all devices (mobile, laptop, etc.), configure your Firebase keys in .env and Vercel. Currently changes save to this browser only."}
+          </p>
+        </div>
       </div>
 
       {/* Password Change Card */}

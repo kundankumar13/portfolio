@@ -1,4 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
+import { doc, getDoc, setDoc } from "firebase/firestore";
+import { db, isFirebaseConfigured } from "../firebase/config";
 
 const AuthContext = createContext(null);
 
@@ -25,6 +27,30 @@ export function AuthProvider({ children }) {
     return { username: DEFAULT_USERNAME };
   });
 
+  // Helper to fetch credentials from Firebase Firestore
+  const fetchRemoteCreds = async () => {
+    if (!isFirebaseConfigured || !db) return null;
+    try {
+      const credRef = doc(db, "admin_config", "credentials");
+      const snap = await getDoc(credRef);
+      if (snap.exists()) {
+        const remoteData = snap.data();
+        localStorage.setItem(CREDENTIALS_KEY, JSON.stringify(remoteData));
+        return remoteData;
+      }
+    } catch (e) {
+      console.warn("[Auth] Failed to fetch remote credentials from Firestore:", e);
+    }
+    return null;
+  };
+
+  // Sync credentials on mount if Firebase is configured
+  useEffect(() => {
+    if (isFirebaseConfigured && db) {
+      fetchRemoteCreds();
+    }
+  }, []);
+
   const getStoredCreds = () => {
     try {
       const stored = localStorage.getItem(CREDENTIALS_KEY);
@@ -41,9 +67,17 @@ export function AuthProvider({ children }) {
   };
 
   const login = async (username, password, rememberMe = false) => {
-    const creds = getStoredCreds();
+    // Attempt to fetch the latest credentials from cloud first
+    let creds = null;
+    if (isFirebaseConfigured && db) {
+      creds = await fetchRemoteCreds();
+    }
+    if (!creds) {
+      creds = getStoredCreds();
+    }
+
     const cleanUser = username.trim().toLowerCase();
-    const expectedUser = creds.username.trim().toLowerCase();
+    const expectedUser = (creds.username || DEFAULT_USERNAME).trim().toLowerCase();
 
     // Check username
     if (cleanUser !== expectedUser) {
@@ -80,7 +114,14 @@ export function AuthProvider({ children }) {
   };
 
   const changePassword = async (oldPassword, newPassword) => {
-    const creds = getStoredCreds();
+    let creds = null;
+    if (isFirebaseConfigured && db) {
+      creds = await fetchRemoteCreds();
+    }
+    if (!creds) {
+      creds = getStoredCreds();
+    }
+
     let oldMatches = false;
     if (creds.passwordHash) {
       const oldHash = await sha256(oldPassword);
@@ -99,12 +140,33 @@ export function AuthProvider({ children }) {
 
     const newHash = await sha256(newPassword);
     const updated = {
-      ...creds,
+      username: creds.username || DEFAULT_USERNAME,
       passwordHash: newHash,
-      plainPassword: null // clear plain fallback
+      updatedAt: new Date().toISOString()
     };
+
+    // Update local cache
     localStorage.setItem(CREDENTIALS_KEY, JSON.stringify(updated));
-    return { success: true, message: "Password updated successfully!" };
+
+    // Sync to Firebase Firestore across all devices
+    if (isFirebaseConfigured && db) {
+      try {
+        const credRef = doc(db, "admin_config", "credentials");
+        await setDoc(credRef, updated, { merge: true });
+        return { success: true, message: "Password updated and synced across all devices!" };
+      } catch (err) {
+        console.error("[Auth] Failed to sync password to Firestore:", err);
+        return {
+          success: false,
+          error: "Cloud sync failed! Firestore database is not enabled in Firebase Console yet. Please create the Firestore database."
+        };
+      }
+    }
+
+    return {
+      success: true,
+      message: "Password updated locally! (Add Firebase keys to .env to sync across all devices)"
+    };
   };
 
   return (
@@ -114,7 +176,8 @@ export function AuthProvider({ children }) {
         adminUser,
         login,
         logout,
-        changePassword
+        changePassword,
+        isFirebaseConfigured
       }}
     >
       {children}
@@ -129,3 +192,4 @@ export function useAuth() {
   }
   return context;
 }
+
