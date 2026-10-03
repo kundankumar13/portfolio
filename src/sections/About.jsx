@@ -1,7 +1,6 @@
 
 import { motion } from "framer-motion";
 import React, { useMemo } from "react";
-import ph from "../assets/ph.png";
 import { usePortfolio } from "../context/PortfolioContext";
 import { downloadCV } from "../utils/downloadCV";
 import { FaDownload } from "react-icons/fa6";
@@ -15,14 +14,19 @@ export default function About() {
     { label: "Focus", value: "Performance & UX" },
   ];
 
-  // Resolve profile image safely: if user uploaded an image or link use it, otherwise fall back to ph
+  // Resolve profile image safely: only use photo if user uploaded one or pasted a direct URL
   const resolvedProfileImage = useMemo(() => {
     if (about.profileImage && typeof about.profileImage === "string") {
-      if (about.profileImage.startsWith("data:") || about.profileImage.startsWith("http")) {
-        return about.profileImage;
+      const trimmed = about.profileImage.trim();
+      if (
+        (trimmed.startsWith("data:image/") || trimmed.startsWith("http://") || trimmed.startsWith("https://")) &&
+        !trimmed.includes("ph.png") &&
+        !trimmed.includes("ph-")
+      ) {
+        return trimmed;
       }
     }
-    return ph;
+    return null;
   }, [about.profileImage]);
 
   const glows = [
@@ -47,22 +51,37 @@ export default function About() {
 
           {/* Profile Image with Portrait Ratio & Face-Focused Object-Top Alignment */}
           <motion.div
-            className="relative w-[180px] h-[220px] sm:w-[210px] sm:h-[260px] md:w-[240px] md:h-[300px] rounded-3xl overflow-hidden shadow-2xl bg-gradient-to-br from-[#1cd8d2]/20 to-[#302b63]/20 border-2 border-[#1cd8d2]/30 shrink-0"
+            className="relative w-[180px] h-[220px] sm:w-[210px] sm:h-[260px] md:w-[240px] md:h-[300px] rounded-3xl overflow-hidden shadow-2xl bg-gradient-to-br from-[#1cd8d2]/20 via-[#302b63]/25 to-black/70 border-2 border-[#1cd8d2]/30 shrink-0 flex items-center justify-center"
             initial={{ opacity: 0, scale: 0.8, x: -40 }}
             whileInView={{ opacity: 1, scale: 1, x: 0 }}
             viewport={{ once: false, amount: 0.2 }}
             transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
             whileHover={{ scale: 1.03 }}
           >
-            <img 
-              src={resolvedProfileImage} 
-              alt={about.name || "Kundan Kumar"} 
-              className="absolute inset-0 w-full h-full object-cover object-top"
-              onError={(e) => { e.currentTarget.src = ph; }}
-              loading="lazy"
-              decoding="async"
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent pointer-events-none" />
+            {resolvedProfileImage ? (
+              <>
+                <img 
+                  src={resolvedProfileImage} 
+                  alt={about.name || "Kundan Kumar"} 
+                  className="absolute inset-0 w-full h-full object-cover object-top"
+                  loading="lazy"
+                  decoding="async"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent pointer-events-none" />
+              </>
+            ) : (
+              <div className="flex flex-col items-center justify-center p-6 text-center z-10 select-none">
+                <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl bg-gradient-to-tr from-[#00bf8f] to-[#1cd8d2] flex items-center justify-center text-black font-extrabold text-3xl sm:text-4xl shadow-xl shadow-[#00bf8f]/25 mb-3">
+                  {(about.name || "Kundan")[0]}
+                </div>
+                <span className="text-xs font-bold uppercase tracking-widest text-[#1cd8d2]">
+                  {about.title || "Developer"}
+                </span>
+                <span className="text-[11px] text-gray-400 mt-1 font-medium">
+                  {about.name || "Kundan Kumar"}
+                </span>
+              </div>
+            )}
           </motion.div>
 
           <div className="flex-1 flex flex-col justify-center text-center md:text-left">

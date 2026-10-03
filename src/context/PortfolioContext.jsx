@@ -7,6 +7,15 @@ const STORAGE_KEY = "kundan_portfolio_data_v2";
 
 const PortfolioContext = createContext(null);
 
+const sanitizeAbout = (aboutObj) => {
+  if (!aboutObj) return {};
+  const img = aboutObj.profileImage;
+  if (img && typeof img === "string" && (img.includes("ph.png") || img.includes("ph-") || img.includes("/ph.") || img.includes("/assets/ph"))) {
+    return { ...aboutObj, profileImage: "" };
+  }
+  return aboutObj;
+};
+
 export function PortfolioProvider({ children }) {
   const [data, setData] = useState(() => {
     try {
@@ -17,7 +26,7 @@ export function PortfolioProvider({ children }) {
           ...initialPortfolioData,
           ...parsed,
           hero: { ...initialPortfolioData.hero, ...(parsed.hero || {}) },
-          about: { ...initialPortfolioData.about, ...(parsed.about || {}) },
+          about: sanitizeAbout({ ...initialPortfolioData.about, ...(parsed.about || {}) }),
           projects: Array.isArray(parsed.projects) ? parsed.projects : [],
           skills: Array.isArray(parsed.skills) && parsed.skills.length > 0 ? parsed.skills : initialPortfolioData.skills,
           experiences: Array.isArray(parsed.experiences) && parsed.experiences.length > 0 ? parsed.experiences : initialPortfolioData.experiences,
@@ -64,7 +73,7 @@ export function PortfolioProvider({ children }) {
               ...prev,
               ...remote,
               hero: { ...prev.hero, ...(remote.hero || {}) },
-              about: { ...prev.about, ...(remote.about || {}) },
+              about: sanitizeAbout({ ...prev.about, ...(remote.about || {}) }),
               projects: Array.isArray(remote.projects) ? remote.projects : prev.projects,
               skills: Array.isArray(remote.skills) && remote.skills.length > 0 ? remote.skills : prev.skills,
               experiences: Array.isArray(remote.experiences) && remote.experiences.length > 0 ? remote.experiences : prev.experiences,

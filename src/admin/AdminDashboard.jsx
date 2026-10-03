@@ -846,6 +846,15 @@ function AboutTab({ about, updateAbout, hero, updateHero, triggerSaveNotificatio
   const [cvFileName, setCvFileName] = useState("");
 
   useEffect(() => {
+    setTitle(about.title || "");
+    setBio(about.bio || "");
+    setAboutMe(about.aboutMe || "");
+    setAboutMeSub(about.aboutMeSub || "");
+    setStats(about.stats || []);
+    setProfileImage(about.profileImage || "");
+  }, [about]);
+
+  useEffect(() => {
     setResumeLink(hero?.resumeLink || "");
   }, [hero?.resumeLink]);
 
@@ -946,7 +955,7 @@ function AboutTab({ about, updateAbout, hero, updateHero, triggerSaveNotificatio
                 onClick={() => setProfileImage("")}
                 className="px-3 py-2 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-300 text-xs font-medium transition cursor-pointer shrink-0"
               >
-                Reset to Default
+                Delete Photo
               </button>
             )}
           </div>

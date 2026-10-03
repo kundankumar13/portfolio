@@ -2,8 +2,6 @@ import m1 from "../assets/m1.PNG";
 import m2 from "../assets/m2.PNG";
 import w1 from "../assets/w1.PNG";
 import w2 from "../assets/w2.PNG";
-import ph from "../assets/ph.png";
-
 export const initialPortfolioData = {
   githubUsername: "",
   hero: {
@@ -18,7 +16,7 @@ export const initialPortfolioData = {
   about: {
     name: "Kundan Kumar",
     title: "AI Full-Stack Developer",
-    profileImage: ph,
+    profileImage: "",
     bio: "I build scalable, modern applications with a strong focus on clean architecture, delightful UX, and performance. My toolkit spans Java, React, Next.js, TypeScript, Tailwind CSS, and RESTful APIs — bringing ideas to life from concept to production with robust architectures and smooth interfaces.",
     stats: [
       { id: "s1", label: "Experience", value: "1+ Years" },
