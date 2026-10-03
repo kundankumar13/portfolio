@@ -4,12 +4,19 @@ import { db, isFirebaseConfigured } from "../firebase/config";
 
 const AuthContext = createContext(null);
 
-const AUTH_STORAGE_KEY = "kundan_admin_auth_session";
+const AUTH_STORAGE_KEY = "kundan_admin_auth_session_v2";
 const CREDENTIALS_KEY = "kundan_admin_custom_creds";
+
+// Clean up any old legacy session automatically
+try {
+  localStorage.removeItem("kundan_admin_auth_session");
+  sessionStorage.removeItem("kundan_admin_auth_session");
+} catch (e) {}
 
 // Default admin credentials (loaded from .env if available)
 const DEFAULT_USERNAME = (import.meta.env.VITE_ADMIN_USER || "kundan").trim();
 const DEFAULT_INITIAL_PLAIN = import.meta.env.VITE_ADMIN_PASS || "admin@kundan2026";
+const ADMIN_EMAIL = import.meta.env.VITE_ADMIN_EMAIL || "kundanmahato14499@gmail.com";
 
 // Helper to hash password using Web Crypto API
 async function sha256(str) {
@@ -21,10 +28,14 @@ async function sha256(str) {
 
 export function AuthProvider({ children }) {
   const [isAuthenticated, setIsAuthenticated] = useState(() => {
-    return sessionStorage.getItem(AUTH_STORAGE_KEY) === "true" || localStorage.getItem(AUTH_STORAGE_KEY) === "true";
+    return (
+      sessionStorage.getItem(AUTH_STORAGE_KEY) === "true" ||
+      localStorage.getItem(AUTH_STORAGE_KEY) === "true"
+    );
   });
+
   const [adminUser, setAdminUser] = useState(() => {
-    return { username: DEFAULT_USERNAME };
+    return { username: DEFAULT_USERNAME, email: ADMIN_EMAIL };
   });
 
   // Helper to fetch credentials from Firebase Firestore
@@ -62,12 +73,12 @@ export function AuthProvider({ children }) {
     }
     return {
       username: DEFAULT_USERNAME,
-      plainPassword: DEFAULT_INITIAL_PLAIN // Fallback plain password for initial setup
+      plainPassword: DEFAULT_INITIAL_PLAIN
     };
   };
 
-  const login = async (username, password, rememberMe = false) => {
-    // Attempt to fetch the latest credentials from cloud first
+  // Direct Username & Password Login
+  const login = async (username, password, rememberMe = true) => {
     let creds = null;
     if (isFirebaseConfigured && db) {
       creds = await fetchRemoteCreds();
@@ -79,32 +90,33 @@ export function AuthProvider({ children }) {
     const cleanUser = username.trim().toLowerCase();
     const expectedUser = (creds.username || DEFAULT_USERNAME).trim().toLowerCase();
 
-    // Check username
+    // 1. Check Username
     if (cleanUser !== expectedUser) {
-      return { success: false, error: "Invalid Username! Only authorized admin can access." };
+      return { success: false, error: "Invalid Username! Please check and try again." };
     }
 
-    // Check password
+    // 2. Check Password
     let passwordMatches = false;
     if (creds.passwordHash) {
       const inputHash = await sha256(password);
       passwordMatches = inputHash === creds.passwordHash;
     } else {
-      // Compare with default or stored plain
       passwordMatches = password === (creds.plainPassword || DEFAULT_INITIAL_PLAIN);
     }
 
-    if (passwordMatches) {
-      setIsAuthenticated(true);
-      if (rememberMe) {
-        localStorage.setItem(AUTH_STORAGE_KEY, "true");
-      } else {
-        sessionStorage.setItem(AUTH_STORAGE_KEY, "true");
-      }
-      return { success: true };
-    } else {
-      return { success: false, error: "Invalid Password! Please enter the correct password." };
+    if (!passwordMatches) {
+      return { success: false, error: "Invalid Password! Access denied." };
     }
+
+    // Login Approved!
+    setIsAuthenticated(true);
+    if (rememberMe) {
+      localStorage.setItem(AUTH_STORAGE_KEY, "true");
+    } else {
+      sessionStorage.setItem(AUTH_STORAGE_KEY, "true");
+    }
+
+    return { success: true };
   };
 
   const logout = () => {
@@ -158,7 +170,7 @@ export function AuthProvider({ children }) {
         console.error("[Auth] Failed to sync password to Firestore:", err);
         return {
           success: false,
-          error: "Cloud sync failed! Firestore database is not enabled in Firebase Console yet. Please create the Firestore database."
+          error: "Cloud sync failed! Firestore database is not enabled in Firebase Console yet."
         };
       }
     }
@@ -192,4 +204,3 @@ export function useAuth() {
   }
   return context;
 }
-

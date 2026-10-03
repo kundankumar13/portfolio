@@ -1,4 +1,4 @@
-import { FaXTwitter, FaLinkedin, FaGithub, FaFacebook, FaInstagram, FaYoutube, FaShieldHalved } from "react-icons/fa6";
+import { FaXTwitter, FaLinkedin, FaGithub, FaFacebook, FaInstagram, FaYoutube } from "react-icons/fa6";
 import { motion } from "framer-motion";
 import { usePortfolio } from "../context/PortfolioContext";
 
@@ -111,13 +111,6 @@ export default function Footer() {
           transition={{ duration: 0.6, delay: 0.45 }}
         >
           <span>&copy; {new Date().getFullYear()} {name}. All rights reserved.</span>
-          <a
-            href="/admin"
-            title="Admin Login"
-            className="text-gray-600 hover:text-[#1cd8d2] transition-colors p-1"
-          >
-            <FaShieldHalved className="text-[10px]" />
-          </a>
         </motion.p>
       </motion.div>
     </footer>

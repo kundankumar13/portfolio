@@ -7,8 +7,8 @@ export default function ProtectedRoute({ children }) {
   const location = useLocation();
 
   if (!isAuthenticated) {
-    // Redirect unauthenticated user to admin login
-    return <Navigate to="/admin/login" state={{ from: location }} replace />;
+    // Redirect unauthenticated user to secret admin login
+    return <Navigate to="/kundan-secret-portal/login" state={{ from: location }} replace />;
   }
 
   return children;

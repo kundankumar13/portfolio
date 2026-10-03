@@ -1,7 +1,6 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { FiX } from "react-icons/fi";
 import { FaDownload } from "react-icons/fa6";
-import { Link } from "react-router-dom";
 import { usePortfolio } from "../context/PortfolioContext";
 import { downloadCV } from "../utils/downloadCV";
 
@@ -72,14 +71,6 @@ export default function OverlayMenu({ isOpen, onClose }) {
                 <FaDownload className="text-[#1cd8d2]" />
                 <span>Download CV</span>
               </button>
-
-              <Link
-                to="/admin"
-                onClick={onClose}
-                className="inline-flex items-center gap-2 text-base font-semibold text-[#1cd8d2] border border-[#1cd8d2]/40 bg-[#1cd8d2]/10 px-6 py-2 rounded-full hover:bg-[#1cd8d2]/20 hover:scale-105 transition-all"
-              >
-                <span>🔐 Admin Portal</span>
-              </Link>
             </motion.li>
           </ul>
         </motion.div>

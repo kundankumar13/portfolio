@@ -1,8 +1,7 @@
 import { useEffect, useRef, useState } from "react";
-import { Link } from "react-router-dom";
 import OverlayMenu from "./OverlayMenu";
 import { TfiMenu } from "react-icons/tfi";
-import { FaShieldHalved, FaDownload } from "react-icons/fa6";
+import { FaDownload } from "react-icons/fa6";
 import { usePortfolio } from "../context/PortfolioContext";
 import { downloadCV } from "../utils/downloadCV";
 
@@ -42,6 +41,23 @@ export default function Navbar() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
+  const clickCount = useRef(0);
+  const clickTimer = useRef(null);
+
+  const handleNameClick = (e) => {
+    clickCount.current += 1;
+    if (clickTimer.current) clearTimeout(clickTimer.current);
+    if (clickCount.current >= 3) {
+      e.preventDefault();
+      clickCount.current = 0;
+      window.location.href = "/kundan-secret-portal";
+      return;
+    }
+    clickTimer.current = setTimeout(() => {
+      clickCount.current = 0;
+    }, 600);
+  };
+
   return (
     <>
       <nav
@@ -54,7 +70,8 @@ export default function Navbar() {
         <div className="flex items-center space-x-2">
           <a
             href="#home"
-            className="text-xl sm:text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-white via-gray-200 to-[#1cd8d2] hover:opacity-90 transition-opacity"
+            onClick={handleNameClick}
+            className="text-xl sm:text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-white via-gray-200 to-[#1cd8d2] hover:opacity-90 transition-opacity select-none cursor-pointer"
           >
             {name}
           </a>
@@ -82,15 +99,6 @@ export default function Navbar() {
               <span className="hidden sm:inline">Download </span>CV
             </span>
           </button>
-
-          <Link
-            to="/admin"
-            className="flex items-center gap-1.5 px-3 sm:px-3.5 py-1.5 rounded-full text-xs font-semibold bg-white/10 border border-[#1cd8d2]/40 text-[#1cd8d2] hover:bg-[#1cd8d2]/20 hover:scale-105 transition-all shadow-md cursor-pointer"
-            title="Admin Dashboard"
-          >
-            <FaShieldHalved className="text-xs" />
-            <span className="hidden sm:inline">Admin</span>
-          </Link>
 
           <div className="hidden lg:block">
             <a

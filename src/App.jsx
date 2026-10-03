@@ -1,5 +1,5 @@
 import React from "react";
-import { Routes, Route, Navigate } from "react-router-dom";
+import { Routes, Route, Navigate, useNavigate } from "react-router-dom";
 import CustomCursor from "./components/CustomCursor";
 import Navbar from "./components/Navbar";
 import ParticlesBackground from "./components/ParticlesBackground";
@@ -77,20 +77,44 @@ function PortfolioHome() {
 }
 
 export default function App() {
+  const navigate = useNavigate();
+
+  React.useEffect(() => {
+    const handleKeyDown = (e) => {
+      // Secret Shortcut: Ctrl + Shift + K (or Cmd + Shift + K on Mac)
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && (e.key === "K" || e.key === "k")) {
+        e.preventDefault();
+        navigate("/kundan-secret-portal");
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [navigate]);
+
   return (
     <AuthProvider>
       <PortfolioProvider>
         <Routes>
           <Route path="/" element={<PortfolioHome />} />
-          <Route path="/admin/login" element={<AdminLogin />} />
+
+          {/* Secret Admin Portal (Only accessible to Kundan) */}
+          <Route path="/kundan-secret-portal/login" element={<AdminLogin />} />
           <Route
-            path="/admin"
+            path="/kundan-secret-portal"
             element={
               <ProtectedRoute>
                 <AdminDashboard />
               </ProtectedRoute>
             }
           />
+          <Route path="/kundan-secret-portal/*" element={<Navigate to="/kundan-secret-portal" replace />} />
+
+          {/* Block /admin completely! Anyone typing /admin is redirected to Home */}
+          <Route path="/admin" element={<Navigate to="/" replace />} />
+          <Route path="/admin/*" element={<Navigate to="/" replace />} />
+
+          {/* Catch-all fallback */}
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </PortfolioProvider>

@@ -101,3 +101,13 @@ Desktop.ini
 *.tmp
 *.temp
 backup/
+
+# ==========================================
+# 8. AI ASSISTANTS & LOCAL CONFIGS
+# ==========================================
+.gemini/
+.agents/
+.antigravity/
+.system_generated/
+*.patch
+*.diff
