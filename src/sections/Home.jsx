@@ -92,7 +92,7 @@ export default function Home() {
             >
               Hello, I'm
               <br />
-              <span className="text-white font-bold text-3xl sm:text-5xl md:text-6xl lg:text-7xl xl:text-8xl break-words">
+              <span className="text-white font-bold text-[1.75rem] min-[380px]:text-3xl sm:text-5xl md:text-6xl lg:text-7xl xl:text-8xl whitespace-nowrap inline-block">
                 {hero.name || "Kundan Kumar"}
               </span>
             </motion.h1>

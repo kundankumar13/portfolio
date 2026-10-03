@@ -71,7 +71,7 @@ export default function Navbar() {
           <a
             href="#home"
             onClick={handleNameClick}
-            className="text-xl sm:text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-white via-gray-200 to-[#1cd8d2] hover:opacity-90 transition-opacity select-none cursor-pointer"
+            className="text-xl sm:text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-white via-gray-200 to-[#1cd8d2] hover:opacity-90 transition-opacity select-none cursor-pointer whitespace-nowrap"
           >
             {name}
           </a>
