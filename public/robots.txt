@@ -1,0 +1,9 @@
+# Allow all search engines including Googlebot and Googlebot-Image to index site and favicons
+User-agent: *
+Allow: /
+
+# Favicon and media explicitly allowed
+Allow: /favicon.ico
+Allow: /favicon*.png
+Allow: /og-image.jpg
+Allow: /site.webmanifest
