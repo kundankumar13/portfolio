@@ -29,7 +29,7 @@ export default function OverlayMenu({ isOpen, onClose }) {
             <FiX />
           </button>
 
-          <ul className="space-y-4 text-center">
+          <ul className="space-y-3 sm:space-y-4 text-center px-4">
             {[
               "Home",
               "About",
@@ -48,7 +48,7 @@ export default function OverlayMenu({ isOpen, onClose }) {
                 <a
                   href={`#${item.toLowerCase()}`}
                   onClick={onClose}
-                  className="text-3xl sm:text-4xl text-white font-semibold hover:text-[#1cd8d2] transition-colors duration-300"
+                  className="text-2xl sm:text-4xl text-white font-semibold hover:text-[#1cd8d2] transition-colors duration-300"
                 >
                   {item}
                 </a>
@@ -59,14 +59,14 @@ export default function OverlayMenu({ isOpen, onClose }) {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.9 }}
-              className="pt-4 flex flex-col items-center gap-3"
+              className="pt-3 sm:pt-4 flex flex-col items-center gap-3"
             >
               <button
                 onClick={() => {
                   onClose();
                   downloadCV(resumeLink, "Kundan_Kumar_CV");
                 }}
-                className="inline-flex items-center gap-2 text-lg font-semibold text-white border border-[#1cd8d2] bg-gradient-to-r from-[#1cd8d2]/20 to-[#00bf8f]/20 px-6 py-2.5 rounded-full hover:scale-105 transition-all shadow-lg shadow-[#1cd8d2]/20 cursor-pointer"
+                className="inline-flex items-center gap-2 text-sm sm:text-lg font-semibold text-white border border-[#1cd8d2] bg-gradient-to-r from-[#1cd8d2]/20 to-[#00bf8f]/20 px-5 py-2 sm:px-6 sm:py-2.5 rounded-full hover:scale-105 transition-all shadow-lg shadow-[#1cd8d2]/20 cursor-pointer"
               >
                 <FaDownload className="text-[#1cd8d2]" />
                 <span>Download CV</span>

@@ -20,7 +20,7 @@ export default function Testimonials(){
       </div>
 
       <motion.h2
-        className="text-3xl sm:text-4xl md:text-5xl font-bold text-center bg-clip-text text-transparent bg-gradient-to-r from-[#1cd8d2] via-[#00bf8f] to-white z-10"
+        className="text-2xl sm:text-4xl md:text-5xl font-bold text-center bg-clip-text text-transparent bg-gradient-to-r from-[#1cd8d2] via-[#00bf8f] to-white z-10"
         initial={{ opacity: 0, y: -30 }}
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: false, amount: 0.2 }}
@@ -30,7 +30,7 @@ export default function Testimonials(){
       </motion.h2>
 
       <motion.p
-        className="mt-2 mb-12 sm:mb-16 text-gray-300 text-center text-sm sm:text-base max-w-md z-10 px-4"
+        className="mt-2 mb-10 sm:mb-16 text-gray-300 text-center text-xs sm:text-sm md:text-base max-w-md z-10 px-4 leading-relaxed"
         initial={{ opacity: 0, y: 15 }}
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: false, amount: 0.2 }}
@@ -48,27 +48,27 @@ export default function Testimonials(){
           transition={{ duration: 0.6, delay: i * 0.12, ease: [0.22, 1, 0.36, 1] }}
           viewport={{ once: false, amount: 0.2 }}
           whileHover={{ y: -6, scale: 1.02, borderColor: "rgba(28,216,210,0.5)" }}
-          className="bg-white/5 backdrop-blur-lg border border-white/10 rounded-2xl p-6 sm:p-8 flex flex-col items-center text-center shadow-xl transition-colors duration-300"
+          className="bg-white/5 backdrop-blur-lg border border-white/10 rounded-2xl p-5 sm:p-8 flex flex-col items-center text-center shadow-xl transition-colors duration-300"
         >
-            <div className="relative mb-4">
+            <div className="relative mb-3 sm:mb-4">
               <img 
                 src={t.image} 
                 alt={t.name} 
-                className="w-20 h-20 rounded-full border-2 border-[#1cd8d2]/50 object-cover shadow-lg" 
+                className="w-16 h-16 sm:w-20 sm:h-20 rounded-full border-2 border-[#1cd8d2]/50 object-cover shadow-lg" 
                 loading="lazy"
               />
-              <span className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-gradient-to-tr from-[#1cd8d2] to-[#00bf8f] text-black text-xs font-bold flex items-center justify-center">
+              <span className="absolute -bottom-1 -right-1 w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-gradient-to-tr from-[#1cd8d2] to-[#00bf8f] text-black text-[10px] sm:text-xs font-bold flex items-center justify-center">
                 ★
               </span>
             </div>
 
-            <p className="text-gray-200 italic mt-2 mb-4 text-sm sm:text-base leading-relaxed">
+            <p className="text-gray-200 italic mt-2 mb-3 sm:mb-4 text-xs sm:text-sm md:text-base leading-relaxed break-words">
               "{t.review}"
             </p>
-            <h3 className="text-lg font-bold text-white tracking-wide">
+            <h3 className="text-base sm:text-lg font-bold text-white tracking-wide break-words">
               {t.name}
             </h3>
-            <p className="text-xs sm:text-sm text-[#1cd8d2] font-medium mt-0.5">
+            <p className="text-[11px] sm:text-xs md:text-sm text-[#1cd8d2] font-medium mt-0.5 break-words">
               {t.role}
             </p>
           </motion.div>

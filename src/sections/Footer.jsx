@@ -43,12 +43,12 @@ export default function Footer() {
         transition={{ duration: 0.8 }}
       >
         <motion.h2
-          className="font-semibold leading-none text-white text-center select-none"
+          className="font-semibold leading-none text-white text-center select-none max-w-full"
           style={{
-            fontSize: "clamp(2.5rem, 6vw, 8rem)",
+            fontSize: "clamp(1.8rem, 6.5vw, 7.5rem)",
             letterSpacing: "0.02em",
-            lineHeight: 0.9,
-            padding: "0 3vw",
+            lineHeight: 0.95,
+            padding: "0 2vw",
             whiteSpace: "nowrap",
             textShadow: "0 2px 18px rgba(0, 0, 0, 0.45)",
           }}

@@ -86,7 +86,7 @@ export default function About() {
 
           <div className="flex-1 flex flex-col justify-center text-center md:text-left">
             <motion.h2
-              className="text-3xl sm:text-4xl md:text-5xl font-extrabold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-[#1cd8d2] via-[#00bf8f] to-[#1cd8d2]"
+              className="text-2xl sm:text-4xl md:text-5xl font-extrabold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-[#1cd8d2] via-[#00bf8f] to-[#1cd8d2]"
               initial={{ opacity: 0, y: 25 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: false, amount: 0.2 }}
@@ -96,7 +96,7 @@ export default function About() {
             </motion.h2>
 
             <motion.p
-              className="mt-2 text-base sm:text-xl text-white/90 font-semibold"
+              className="mt-1 sm:mt-2 text-sm sm:text-lg md:text-xl text-white/90 font-semibold"
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: false, amount: 0.2 }}
@@ -106,7 +106,7 @@ export default function About() {
             </motion.p>
 
             <motion.p
-              className="mt-4 text-gray-300 leading-relaxed text-sm sm:text-base md:text-lg max-w-2xl md:max-w-3xl"
+              className="mt-3 sm:mt-4 text-gray-300 leading-relaxed text-xs sm:text-sm md:text-base lg:text-lg max-w-2xl md:max-w-3xl"
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: false, amount: 0.2 }}
@@ -116,18 +116,18 @@ export default function About() {
             </motion.p>
 
             {/* Stats Cards with Staggered Scroll Entrance */}
-            <div className="mt-6 grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4 max-w-xl">
+            <div className="mt-6 grid grid-cols-2 sm:grid-cols-3 gap-2.5 sm:gap-4 max-w-xl">
               {states.map((item, i) => (
                 <motion.div
                   key={i}
-                  className="rounded-2xl border border-white/10 bg-white/5 hover:bg-white/10 hover:border-[#1cd8d2]/30 transition-all p-3 sm:p-4 text-center group shadow-lg"
+                  className="rounded-2xl border border-white/10 bg-white/5 hover:bg-white/10 hover:border-[#1cd8d2]/30 transition-all p-2.5 sm:p-4 text-center group shadow-lg"
                   initial={{ opacity: 0, y: 30, scale: 0.9 }}
                   whileInView={{ opacity: 1, y: 0, scale: 1 }}
                   viewport={{ once: false, amount: 0.2 }}
                   transition={{ delay: 0.35 + 0.08 * i, duration: 0.5, ease: "easeOut" }}
                   whileHover={{ y: -4 }}
                 >
-                  <div className="text-xs sm:text-sm text-gray-400 group-hover:text-gray-300">{item.label}</div>
+                  <div className="text-[11px] sm:text-sm text-gray-400 group-hover:text-gray-300">{item.label}</div>
                   <div className="text-sm sm:text-lg font-bold text-white group-hover:text-[#1cd8d2] transition-colors mt-0.5">{item.value}</div>
                 </motion.div>
               ))}
@@ -135,7 +135,7 @@ export default function About() {
 
             {/* Action Buttons */}
             <motion.div
-              className="mt-6 flex flex-wrap gap-3 sm:gap-4 justify-center md:justify-start"
+              className="mt-6 flex flex-wrap gap-2.5 sm:gap-4 justify-center md:justify-start"
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: false, amount: 0.2 }}
@@ -143,20 +143,20 @@ export default function About() {
             >
               <button
                 onClick={() => downloadCV(data?.hero?.resumeLink, "Kundan_Kumar_CV")}
-                className="inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-[#1cd8d2] via-[#00bf8f] to-[#1cd8d2] text-black font-bold px-6 py-3 hover:opacity-90 transition-all shadow-lg hover:scale-105 cursor-pointer"
+                className="inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-[#1cd8d2] via-[#00bf8f] to-[#1cd8d2] text-black font-bold text-xs sm:text-sm px-4 py-2.5 sm:px-6 sm:py-3 hover:opacity-90 transition-all shadow-lg hover:scale-105 cursor-pointer"
               >
-                <FaDownload className="text-sm" />
+                <FaDownload className="text-xs sm:text-sm" />
                 <span>Download CV</span>
               </button>
               <a
                 href="#projects"
-                className="inline-flex items-center justify-center rounded-xl bg-white text-black font-bold px-6 py-3 hover:bg-gray-200 transition-all shadow-lg hover:scale-105"
+                className="inline-flex items-center justify-center rounded-xl bg-white text-black font-bold text-xs sm:text-sm px-4 py-2.5 sm:px-6 sm:py-3 hover:bg-gray-200 transition-all shadow-lg hover:scale-105"
               >
                 View Projects ↗
               </a>
               <a
                 href="#contact"
-                className="inline-flex items-center justify-center rounded-xl border border-white/20 bg-white/10 text-white font-semibold px-6 py-3 hover:bg-white/20 transition-all shadow-lg hover:scale-105"
+                className="inline-flex items-center justify-center rounded-xl border border-white/20 bg-white/10 text-white font-semibold text-xs sm:text-sm px-4 py-2.5 sm:px-6 sm:py-3 hover:bg-white/20 transition-all shadow-lg hover:scale-105"
               >
                 Get in Touch
               </a>

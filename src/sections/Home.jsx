@@ -68,7 +68,7 @@ export default function Home() {
         <div className="flex flex-col justify-center h-full text-center lg:text-left relative">
           <div className="w-full lg:pr-24 mx-auto max-w-[48rem]">
             <motion.div
-              className="mb-3 text-xl sm:text-2xl md:text-3xl lg:text-4xl font-semibold text-white tracking-wide min-h-[1.6em]"
+              className="mb-2 sm:mb-3 text-lg sm:text-2xl md:text-3xl lg:text-4xl font-semibold text-white tracking-wide min-h-[1.5em]"
               initial={{ opacity: 0, y: 12 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: false, amount: 0.2 }}
@@ -83,8 +83,8 @@ export default function Home() {
               ></span>
             </motion.div>
 
-            <motion.h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold text-transparent bg-clip-text
-            bg-gradient-to-r from-[#1cd8d2] via-[#00bf8f] to-[#302b63] drop-shadow-lg"
+            <motion.h1 className="text-3xl sm:text-5xl md:text-6xl lg:text-7xl font-bold text-transparent bg-clip-text
+            bg-gradient-to-r from-[#1cd8d2] via-[#00bf8f] to-[#302b63] drop-shadow-lg leading-tight"
               initial={{ opacity: 0, y: 40 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: false, amount: 0.2 }}
@@ -92,12 +92,12 @@ export default function Home() {
             >
               Hello, I'm
               <br />
-              <span className="text-white font-bold text-5xl sm:text-6xl md:text-7xl lg:text-8xl lg:whitespace-nowrap">
+              <span className="text-white font-bold text-3xl sm:text-5xl md:text-6xl lg:text-7xl xl:text-8xl break-words">
                 {hero.name || "Kundan Kumar"}
               </span>
             </motion.h1>
 
-            <motion.p className="mt-6 text-base sm:text-lg md:text-xl text-gray-300 max-w-2xl mx-auto lg:mx-0 leading-relaxed"
+            <motion.p className="mt-4 sm:mt-6 text-sm sm:text-base md:text-lg lg:text-xl text-gray-300 max-w-2xl mx-auto lg:mx-0 leading-relaxed"
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: false, amount: 0.2 }}
@@ -106,18 +106,18 @@ export default function Home() {
               {hero.tagline || "I turn complex ideas into seamless, impactful web experiences — building modern, scalable, and lightning-fast applications that make a difference."}
             </motion.p>
 
-            <motion.div className="mt-10 flex flex-wrap items-center justify-center lg:justify-start gap-6"
+            <motion.div className="mt-8 sm:mt-10 flex flex-wrap items-center justify-center lg:justify-start gap-4 sm:gap-6"
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: false, amount: 0.2 }}
               transition={{ delay: 0.3, duration: 0.7 }}
             >
               <a href="#projects"
-                className="px-7 py-3 rounded-full font-medium text-lg text-white bg-gradient-to-r 
+                className="px-5 py-2.5 sm:px-7 sm:py-3 rounded-full font-medium text-sm sm:text-base md:text-lg text-white bg-gradient-to-r 
               from-[#1cd8d2] via-[#00bf8f] to-[#302b63] shadow-lg hover:scale-105 transition-all text-center"
               >View My Work</a>
               <a href="#contact"
-                className="px-7 py-3 rounded-full text-lg font-medium text-black bg-white
+                className="px-5 py-2.5 sm:px-7 sm:py-3 rounded-full text-sm sm:text-base md:text-lg font-medium text-black bg-white
                hover:bg-gray-200 shadow-lg hover:scale-105 transition-all text-center"
               >Contact Me</a>
             </motion.div>

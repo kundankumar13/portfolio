@@ -80,7 +80,7 @@ export default function Experience() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: false, amount: 0.3 }}
             transition={{ duration: 0.6, delay: 0.1 }}
-            className="text-3xl sm:text-4xl md:text-5xl font-extrabold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-white via-gray-100 to-gray-400"
+            className="text-2xl sm:text-4xl md:text-5xl font-extrabold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-white via-gray-100 to-gray-400"
           >
             Work Experience
           </motion.h2>
@@ -90,7 +90,7 @@ export default function Experience() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: false, amount: 0.3 }}
             transition={{ duration: 0.6, delay: 0.2 }}
-            className="text-gray-400 text-sm sm:text-base mt-4 leading-relaxed"
+            className="text-gray-400 text-xs sm:text-sm md:text-base mt-3 sm:mt-4 leading-relaxed px-2"
           >
             A chronological timeline of my professional roles, key projects, and accomplishments.
           </motion.p>
@@ -108,7 +108,7 @@ export default function Experience() {
           />
 
           {/* Timeline Experience Cards */}
-          <div className="space-y-12 sm:space-y-16">
+          <div className="space-y-10 sm:space-y-16">
             {experiences.map((exp, idx) => {
               const isEven = idx % 2 === 0;
 
@@ -123,7 +123,7 @@ export default function Experience() {
                     whileInView={{ scale: 1, opacity: 1 }}
                     viewport={{ once: false, amount: 0.5 }}
                     transition={{ duration: 0.4, delay: 0.15 }}
-                    className="absolute left-4 sm:left-1/2 -translate-x-1/2 top-5 sm:top-1/2 sm:-translate-y-1/2 z-20 w-10 h-10 rounded-full bg-[#080b11] border-2 border-[#1cd8d2] flex items-center justify-center text-[#1cd8d2] shadow-[0_0_15px_rgba(28,216,210,0.6)]"
+                    className="absolute left-4 sm:left-1/2 -translate-x-1/2 top-5 sm:top-1/2 sm:-translate-y-1/2 z-20 w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-[#080b11] border-2 border-[#1cd8d2] flex items-center justify-center text-[#1cd8d2] shadow-[0_0_15px_rgba(28,216,210,0.6)]"
                   >
                     <FaBriefcase className="text-xs" />
                     <span className="absolute inset-0 rounded-full border border-[#1cd8d2] animate-ping opacity-30" />
@@ -147,35 +147,35 @@ export default function Experience() {
                       delay: 0.1,
                       ease: [0.22, 1, 0.36, 1]
                     }}
-                    className={`w-full pl-12 sm:pl-0 sm:w-[calc(50%-40px)] ${
+                    className={`w-full pl-10 sm:pl-0 sm:w-[calc(50%-40px)] ${
                       isEven ? "sm:mr-auto sm:text-right" : "sm:ml-auto sm:text-left"
                     }`}
                   >
-                    <div className="group relative p-6 sm:p-7 rounded-2xl sm:rounded-3xl bg-gradient-to-br from-white/[0.05] to-white/[0.01] border border-white/10 hover:border-[#1cd8d2]/40 backdrop-blur-xl shadow-xl transition-all duration-300 hover:shadow-2xl hover:shadow-[#1cd8d2]/10 hover:-translate-y-1">
+                    <div className="group relative p-5 sm:p-7 rounded-2xl sm:rounded-3xl bg-gradient-to-br from-white/[0.05] to-white/[0.01] border border-white/10 hover:border-[#1cd8d2]/40 backdrop-blur-xl shadow-xl transition-all duration-300 hover:shadow-2xl hover:shadow-[#1cd8d2]/10 hover:-translate-y-1">
                       {/* Top Badges */}
                       <div
                         className={`flex flex-wrap items-center gap-2 mb-3 ${
                           isEven ? "sm:justify-end" : "sm:justify-start"
                         }`}
                       >
-                        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-white/10 text-white">
+                        <span className="inline-flex items-center gap-1 px-2.5 sm:px-3 py-0.5 sm:py-1 rounded-full text-[11px] sm:text-xs font-semibold bg-white/10 text-white">
                           <FaBuilding className="text-[10px] text-[#1cd8d2]" />
                           <span>{exp.company}</span>
                         </span>
 
-                        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-300 border border-emerald-500/20">
+                        <span className="inline-flex items-center gap-1 px-2.5 sm:px-3 py-0.5 sm:py-1 rounded-full text-[11px] sm:text-xs font-semibold bg-emerald-500/10 text-emerald-300 border border-emerald-500/20">
                           <FaCalendarDays className="text-[10px]" />
                           <span>{exp.duration}</span>
                         </span>
                       </div>
 
                       {/* Job Title / Role */}
-                      <h3 className="text-xl sm:text-2xl font-bold text-white group-hover:text-[#1cd8d2] transition-colors duration-200">
+                      <h3 className="text-lg sm:text-xl md:text-2xl font-bold text-white group-hover:text-[#1cd8d2] transition-colors duration-200 break-words">
                         {exp.role}
                       </h3>
 
                       {/* Description */}
-                      <p className="mt-3 text-sm text-gray-300 leading-relaxed whitespace-pre-wrap">
+                      <p className="mt-2.5 sm:mt-3 text-xs sm:text-sm md:text-base text-gray-300 leading-relaxed whitespace-pre-wrap break-words">
                         {exp.description}
                       </p>
                     </div>

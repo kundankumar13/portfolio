@@ -121,7 +121,7 @@ useEffect(() => {
       </div>
 
         <motion.h2 
-          className="text-4xl sm:text-5xl font-bold bg-clip-text text-transparent bg-gradient-to-r 
+          className="text-3xl sm:text-4xl md:text-5xl font-bold bg-clip-text text-transparent bg-gradient-to-r 
           from-[#1cd8d2] via-[#00bf8f] to-[#302b63] z-10 text-center"
           initial={{ opacity: 0, y: -30 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -132,7 +132,7 @@ useEffect(() => {
         </motion.h2>
 
         <motion.p 
-          className="mt-2 mb-12 text-white/90 text-base sm:text-lg z-10 text-center px-4"
+          className="mt-2 mb-8 sm:mb-12 text-white/90 text-xs sm:text-base md:text-lg z-10 text-center px-4"
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: false, amount: 0.3 }}

@@ -20,7 +20,7 @@ export default function Projects() {
         {/* Section Header */}
         <div className="text-center max-w-3xl mx-auto">
           <motion.h2 
-            className="text-4xl sm:text-5xl font-extrabold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-[#1cd8d2] via-[#00bf8f] to-white"
+            className="text-3xl sm:text-4xl md:text-5xl font-extrabold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-[#1cd8d2] via-[#00bf8f] to-white"
             initial={{ opacity: 0, y: -25 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: false, amount: 0.3 }}
@@ -30,7 +30,7 @@ export default function Projects() {
           </motion.h2>
 
           <motion.p 
-            className="mt-3 text-sm sm:text-base md:text-lg text-gray-300 max-w-2xl mx-auto leading-relaxed"
+            className="mt-2 sm:mt-3 text-xs sm:text-base md:text-lg text-gray-300 max-w-2xl mx-auto leading-relaxed px-2"
             initial={{ opacity: 0, y: 15 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: false, amount: 0.3 }}
@@ -73,7 +73,7 @@ export default function Projects() {
                 {/* Project Details */}
                 <div className="p-5 flex flex-col flex-1 justify-between">
                   <div>
-                    <h3 className="text-xl font-bold text-white group-hover:text-[#1cd8d2] transition-colors">
+                    <h3 className="text-lg sm:text-xl font-bold text-white group-hover:text-[#1cd8d2] transition-colors break-words">
                       {project.title}
                     </h3>
                     <p className="mt-2 text-xs sm:text-sm text-gray-300 leading-relaxed line-clamp-2">
