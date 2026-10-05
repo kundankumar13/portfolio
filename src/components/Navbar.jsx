@@ -77,7 +77,8 @@ export default function Navbar() {
           </a>
         </div>
 
-        <div className="block lg:absolute lg:left-1/2 lg:transform lg:-translate-x-1/2">
+        {/* Center Menu on Desktop */}
+        <div className="hidden lg:block lg:absolute lg:left-1/2 lg:transform lg:-translate-x-1/2">
           <button
             onClick={() => setMenuOpen(true)}
             className="text-white text-3xl p-2 rounded-lg hover:bg-white/10 transition-colors focus:outline-none cursor-pointer"
@@ -87,6 +88,7 @@ export default function Navbar() {
           </button>
         </div>
 
+        {/* Right Action Buttons */}
         <div className="flex items-center gap-2 sm:gap-3">
           {/* Download CV button */}
           <button
@@ -107,6 +109,17 @@ export default function Navbar() {
             >
               Reach Out
             </a>
+          </div>
+
+          {/* Mobile Menu Button (Placed on right for natural thumb reach) */}
+          <div className="block lg:hidden">
+            <button
+              onClick={() => setMenuOpen(true)}
+              className="text-white text-2xl sm:text-3xl p-1.5 sm:p-2 rounded-lg hover:bg-white/10 transition-colors focus:outline-none cursor-pointer flex items-center justify-center"
+              aria-label="Open menu"
+            >
+              <TfiMenu />
+            </button>
           </div>
         </div>
       </nav>

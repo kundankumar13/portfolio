@@ -14,18 +14,21 @@ export default function About() {
     { label: "Focus", value: "Performance & UX" },
   ];
 
-  // Resolve profile image safely: only use photo if user uploaded one or pasted a direct URL
+  // Resolve profile image safely: if user uploaded or specified an image, display it
   const resolvedProfileImage = useMemo(() => {
     if (about.profileImage && typeof about.profileImage === "string") {
       const trimmed = about.profileImage.trim();
-      if (
-        (trimmed.startsWith("data:image/") || trimmed.startsWith("http://") || trimmed.startsWith("https://")) &&
-        !trimmed.includes("ph.png") &&
-        !trimmed.includes("ph-")
-      ) {
+      if (trimmed.length > 0) {
         return trimmed;
       }
     }
+    // Instant fallback to dedicated storage backup
+    try {
+      const backup = localStorage.getItem("kundan_custom_profile_image");
+      if (backup && typeof backup === "string" && backup.trim().length > 0) {
+        return backup.trim();
+      }
+    } catch (e) {}
     return null;
   }, [about.profileImage]);
 

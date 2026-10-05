@@ -32,6 +32,7 @@ import {
   FaFilePdf
 } from "react-icons/fa6";
 import { downloadCV } from "../utils/downloadCV";
+import { compressImage } from "../utils/imageCompressor";
 
 export default function AdminDashboard() {
   const {
@@ -858,21 +859,39 @@ function AboutTab({ about, updateAbout, hero, updateHero, triggerSaveNotificatio
     setResumeLink(hero?.resumeLink || "");
   }, [hero?.resumeLink]);
 
-  const handleImageUpload = (e) => {
+  const handleImageUpload = async (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    if (file.size > 3 * 1024 * 1024) {
-      alert("Image size should be under 3MB for fast loading.");
+    if (!file.type.startsWith("image/")) {
+      alert("Please upload a valid image file (JPG, PNG, WEBP).");
       return;
     }
 
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      setProfileImage(reader.result);
-      triggerSaveNotification("Profile photo selected!");
-    };
-    reader.readAsDataURL(file);
+    try {
+      // Compress image client-side to keep size small (~40-80KB)
+      // This guarantees persistence in localStorage and Firebase without exceeding size limits
+      const compressed = await compressImage(file, 800, 800, 0.85);
+      setProfileImage(compressed);
+      // Auto-save immediately to context and localStorage
+      updateAbout({ ...about, profileImage: compressed });
+      triggerSaveNotification("Profile photo uploaded & saved! ✨");
+    } catch (err) {
+      console.warn("Fallback to direct file reader:", err);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setProfileImage(reader.result);
+        updateAbout({ ...about, profileImage: reader.result });
+        triggerSaveNotification("Profile photo uploaded & saved!");
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleDeletePhoto = () => {
+    setProfileImage("");
+    updateAbout({ ...about, profileImage: "" });
+    triggerSaveNotification("Profile photo removed.");
   };
 
   const handleCvUpload = (e) => {
@@ -943,8 +962,14 @@ function AboutTab({ about, updateAbout, hero, updateHero, triggerSaveNotificatio
             <input
               type="text"
               value={profileImage.startsWith("data:") ? "(Custom Photo Uploaded)" : profileImage}
-              onChange={(e) => setProfileImage(e.target.value)}
-              placeholder="Paste direct image URL (https://...)"
+              onChange={(e) => {
+                const val = e.target.value;
+                setProfileImage(val);
+                if (!val.startsWith("data:")) {
+                  updateAbout({ ...about, profileImage: val });
+                }
+              }}
+              placeholder="Paste direct image URL (https://... or /profile-icon.jpg)"
               disabled={profileImage.startsWith("data:")}
               className="flex-1 w-full px-3.5 py-2 rounded-xl bg-white/5 border border-white/10 text-white text-xs placeholder-gray-500 focus:outline-none focus:border-[#1cd8d2]"
             />
@@ -952,7 +977,7 @@ function AboutTab({ about, updateAbout, hero, updateHero, triggerSaveNotificatio
             {profileImage && (
               <button
                 type="button"
-                onClick={() => setProfileImage("")}
+                onClick={handleDeletePhoto}
                 className="px-3 py-2 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-300 text-xs font-medium transition cursor-pointer shrink-0"
               >
                 Delete Photo

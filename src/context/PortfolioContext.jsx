@@ -4,29 +4,36 @@ import { doc, getDoc, setDoc } from "firebase/firestore";
 import { db, isFirebaseConfigured } from "../firebase/config";
 
 const STORAGE_KEY = "kundan_portfolio_data_v2";
+const PHOTO_BACKUP_KEY = "kundan_custom_profile_image";
 
 const PortfolioContext = createContext(null);
 
-const sanitizeAbout = (aboutObj) => {
-  if (!aboutObj) return {};
-  const img = aboutObj.profileImage;
-  if (img && typeof img === "string" && (img.includes("ph.png") || img.includes("ph-") || img.includes("/ph.") || img.includes("/assets/ph"))) {
-    return { ...aboutObj, profileImage: "" };
+const getStoredBackupPhoto = () => {
+  try {
+    return localStorage.getItem(PHOTO_BACKUP_KEY) || "";
+  } catch (e) {
+    return "";
   }
-  return aboutObj;
 };
 
 export function PortfolioProvider({ children }) {
   const [data, setData] = useState(() => {
+    const backupPhoto = getStoredBackupPhoto();
     try {
       const saved = localStorage.getItem(STORAGE_KEY);
       if (saved) {
         const parsed = JSON.parse(saved);
+        const parsedAbout = parsed.about || {};
+        const profileImage =
+          parsedAbout.profileImage && typeof parsedAbout.profileImage === "string" && parsedAbout.profileImage.trim() !== ""
+            ? parsedAbout.profileImage
+            : backupPhoto;
+
         return {
           ...initialPortfolioData,
           ...parsed,
           hero: { ...initialPortfolioData.hero, ...(parsed.hero || {}) },
-          about: sanitizeAbout({ ...initialPortfolioData.about, ...(parsed.about || {}) }),
+          about: { ...initialPortfolioData.about, ...parsedAbout, profileImage },
           projects: Array.isArray(parsed.projects) ? parsed.projects : [],
           skills: Array.isArray(parsed.skills) && parsed.skills.length > 0 ? parsed.skills : initialPortfolioData.skills,
           experiences: Array.isArray(parsed.experiences) && parsed.experiences.length > 0 ? parsed.experiences : initialPortfolioData.experiences,
@@ -38,7 +45,12 @@ export function PortfolioProvider({ children }) {
     } catch (e) {
       console.error("Error reading portfolio data from storage:", e);
     }
-    return { ...initialPortfolioData, projects: [], messages: [] };
+    return {
+      ...initialPortfolioData,
+      about: { ...initialPortfolioData.about, profileImage: backupPhoto },
+      projects: [],
+      messages: []
+    };
   });
 
   const isInitialRemoteFetchDone = useRef(false);
@@ -48,7 +60,21 @@ export function PortfolioProvider({ children }) {
     if (!isFirebaseConfigured || !db) return;
     try {
       const docRef = doc(db, "portfolio_data", "main");
-      await setDoc(docRef, updatedData, { merge: true });
+      const jsonStr = JSON.stringify(updatedData);
+      // Safeguard against Firestore 1MB document limit
+      if (jsonStr.length > 950000) {
+        console.warn("[Portfolio] Payload approaches 1MB limit. Syncing safe subset.");
+        const safeData = {
+          ...updatedData,
+          hero: {
+            ...updatedData.hero,
+            resumeLink: updatedData.hero?.resumeLink?.startsWith("data:") ? "" : updatedData.hero?.resumeLink
+          }
+        };
+        await setDoc(docRef, safeData, { merge: true });
+      } else {
+        await setDoc(docRef, updatedData, { merge: true });
+      }
     } catch (err) {
       console.warn("[Portfolio] Failed to sync to Firestore:", err);
     }
@@ -69,11 +95,28 @@ export function PortfolioProvider({ children }) {
         if (snap.exists() && isMounted) {
           const remote = snap.data();
           setData((prev) => {
+            const remoteAbout = remote.about || {};
+            const backupPhoto = getStoredBackupPhoto();
+            const currentLocalPhoto =
+              prev.about?.profileImage && typeof prev.about.profileImage === "string" && prev.about.profileImage.trim() !== ""
+                ? prev.about.profileImage
+                : backupPhoto;
+
+            // Preserve local photo if remote doesn't have one (prevents blanking photo on refresh)
+            const resolvedProfileImage =
+              remoteAbout.profileImage && typeof remoteAbout.profileImage === "string" && remoteAbout.profileImage.trim() !== ""
+                ? remoteAbout.profileImage
+                : currentLocalPhoto;
+
             const merged = {
               ...prev,
               ...remote,
               hero: { ...prev.hero, ...(remote.hero || {}) },
-              about: sanitizeAbout({ ...prev.about, ...(remote.about || {}) }),
+              about: {
+                ...prev.about,
+                ...remoteAbout,
+                profileImage: resolvedProfileImage
+              },
               projects: Array.isArray(remote.projects) ? remote.projects : prev.projects,
               skills: Array.isArray(remote.skills) && remote.skills.length > 0 ? remote.skills : prev.skills,
               experiences: Array.isArray(remote.experiences) && remote.experiences.length > 0 ? remote.experiences : prev.experiences,
@@ -81,9 +124,16 @@ export function PortfolioProvider({ children }) {
               socials: Array.isArray(remote.socials) && remote.socials.length > 0 ? remote.socials : prev.socials,
               messages: Array.isArray(remote.messages) ? remote.messages : prev.messages
             };
+
             try {
               localStorage.setItem(STORAGE_KEY, JSON.stringify(merged));
-            } catch (e) {}
+              if (resolvedProfileImage) {
+                localStorage.setItem(PHOTO_BACKUP_KEY, resolvedProfileImage);
+              }
+            } catch (e) {
+              console.warn("Storage quota warning on remote merge:", e);
+            }
+
             return merged;
           });
         }
@@ -104,8 +154,20 @@ export function PortfolioProvider({ children }) {
   useEffect(() => {
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+      const currentPhoto = data?.about?.profileImage;
+      if (currentPhoto && typeof currentPhoto === "string" && currentPhoto.trim() !== "") {
+        localStorage.setItem(PHOTO_BACKUP_KEY, currentPhoto);
+      } else if (currentPhoto === "") {
+        localStorage.removeItem(PHOTO_BACKUP_KEY);
+      }
     } catch (e) {
       console.warn("Storage quota exceeded or storage disabled:", e);
+      try {
+        const currentPhoto = data?.about?.profileImage;
+        if (currentPhoto && typeof currentPhoto === "string" && currentPhoto.trim() !== "") {
+          localStorage.setItem(PHOTO_BACKUP_KEY, currentPhoto);
+        }
+      } catch (err) {}
     }
 
     if (isInitialRemoteFetchDone.current) {
@@ -122,10 +184,22 @@ export function PortfolioProvider({ children }) {
   };
 
   const updateAbout = (aboutFields) => {
-    setData((prev) => ({
-      ...prev,
-      about: { ...prev.about, ...aboutFields }
-    }));
+    setData((prev) => {
+      const updatedAbout = { ...prev.about, ...aboutFields };
+      if (aboutFields.profileImage && typeof aboutFields.profileImage === "string" && aboutFields.profileImage.trim() !== "") {
+        try {
+          localStorage.setItem(PHOTO_BACKUP_KEY, aboutFields.profileImage);
+        } catch (e) {}
+      } else if (aboutFields.profileImage === "") {
+        try {
+          localStorage.removeItem(PHOTO_BACKUP_KEY);
+        } catch (e) {}
+      }
+      return {
+        ...prev,
+        about: updatedAbout
+      };
+    });
   };
 
   const updateGithubUsername = (username) => {
@@ -289,6 +363,7 @@ export function PortfolioProvider({ children }) {
     const cleanData = { ...initialPortfolioData, projects: [] };
     setData(cleanData);
     localStorage.removeItem(STORAGE_KEY);
+    localStorage.removeItem(PHOTO_BACKUP_KEY);
     syncToFirestore(cleanData);
   };
 
