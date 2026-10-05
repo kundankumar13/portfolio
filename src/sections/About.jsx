@@ -1,6 +1,6 @@
 
 import { motion } from "framer-motion";
-import React, { useMemo } from "react";
+import { useMemo } from "react";
 import { usePortfolio } from "../context/PortfolioContext";
 import { downloadCV } from "../utils/downloadCV";
 import { FaDownload } from "react-icons/fa6";
@@ -28,7 +28,9 @@ export default function About() {
       if (backup && typeof backup === "string" && backup.trim().length > 0) {
         return backup.trim();
       }
-    } catch (e) {}
+    } catch {
+      // Ignore storage read errors
+    }
     return null;
   }, [about.profileImage]);
 

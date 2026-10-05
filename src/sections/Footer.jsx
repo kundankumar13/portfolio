@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { FaXTwitter, FaLinkedin, FaGithub, FaFacebook, FaInstagram, FaYoutube } from "react-icons/fa6";
 import { motion } from "framer-motion";
 import { usePortfolio } from "../context/PortfolioContext";
@@ -75,7 +75,7 @@ export default function Footer() {
           viewport={{ once: false, amount: 0.2 }}
           transition={{ duration: 0.6, delay: 0.25 }}
         >
-          {socials.map((s, idx) => {
+          {socials.map((s) => {
             const Icon = ICON_MAP[s.iconKey] || FaGithub;
             return (
               <motion.a

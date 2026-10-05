@@ -20,7 +20,7 @@ export function getGAMeasurementId() {
     return envId.trim();
   }
 
-  return "";
+  return "G-9BREYJ24YW";
 }
 
 export function saveGAMeasurementId(id) {
@@ -45,8 +45,8 @@ export function initGA(customId) {
   const id = customId || getGAMeasurementId();
   if (!id || typeof window === "undefined") return false;
 
-  // Check if already injected
-  if (document.getElementById("ga-gtag-script")) {
+  // Check if already injected or gtag exists
+  if (document.getElementById("ga-gtag-script") || window.gtag) {
     isInitialized = true;
     return true;
   }

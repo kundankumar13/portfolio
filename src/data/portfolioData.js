@@ -2,8 +2,10 @@ import m1 from "../assets/m1.PNG";
 import m2 from "../assets/m2.PNG";
 import w1 from "../assets/w1.PNG";
 import w2 from "../assets/w2.PNG";
+import Astra from "../assets/Astra.png";
+
 export const initialPortfolioData = {
-  githubUsername: "",
+  githubUsername: "kundankumar13",
   hero: {
     name: "Kundan Kumar",
     roles: ["Web Developer", "AI Developer", "Software Developer"],
@@ -28,7 +30,32 @@ export const initialPortfolioData = {
     aboutMeSub:
       "I love turning ideas into scalable, user-friendly products that make a real impact."
   },
-  projects: [],
+  projects: [
+    {
+      id: "p1",
+      title: "AI Full-Stack SaaS Platform",
+      description: "Intelligent generative AI web application with secure authentication, multi-modal workflows, and real-time interactive streaming dashboards.",
+      link: "https://github.com/kundankumar13",
+      image: Astra,
+      bgColor: "#0d4d3d"
+    },
+    {
+      id: "p2",
+      title: "Modern Developer Portfolio & CMS",
+      description: "High-performance developer platform featuring Lenis smooth scrolling, Framer Motion physics, secret admin portal, and Firebase cloud sync.",
+      link: "https://github.com/kundankumar13/portfolio",
+      image: Astra,
+      bgColor: "#1a103c"
+    },
+    {
+      id: "p3",
+      title: "GenAI Enterprise Intake App",
+      description: "Enterprise PV intake workflow platform automating high-throughput document parsing, validation pipelines, and interactive dashboard views.",
+      link: "https://github.com/kundankumar13",
+      image: Astra,
+      bgColor: "#0e3a53"
+    }
+  ],
   skills: [
     { id: "sk1", name: "Java", iconKey: "FaJava" },
     { id: "sk2", name: "React", iconKey: "FaReact" },
@@ -100,11 +127,12 @@ export const initialPortfolioData = {
     }
   ],
   socials: [
-    { id: "soc1", platform: "X", label: "X", href: "https://twitter.com/yourprofile", iconKey: "FaXTwitter" },
-    { id: "soc2", platform: "LinkedIn", label: "LinkedIn", href: "https://linkedin.com/yourprofile", iconKey: "FaLinkedin" },
-    { id: "soc3", platform: "Github", label: "Github", href: "https://github.com/yourprofile", iconKey: "FaGithub" },
-    { id: "soc4", platform: "Facebook", label: "Facebook", href: "https://facebook.com/yourprofile", iconKey: "FaFacebook" },
-    { id: "soc5", platform: "Instagram", label: "Instagram", href: "https://instagram.com/yourprofile", iconKey: "FaInstagram" },
+    { id: "soc1", platform: "X", label: "X", href: "https://x.com/kundankumar13", iconKey: "FaXTwitter" },
+    { id: "soc2", platform: "LinkedIn", label: "LinkedIn", href: "https://www.linkedin.com/in/kundankumar13/", iconKey: "FaLinkedin" },
+    { id: "soc3", platform: "Github", label: "Github", href: "https://github.com/kundankumar13", iconKey: "FaGithub" },
+    { id: "soc4", platform: "Facebook", label: "Facebook", href: "https://www.facebook.com/kundankumar13", iconKey: "FaFacebook" },
+    { id: "soc5", platform: "Instagram", label: "Instagram", href: "https://www.instagram.com/kundankumar13/", iconKey: "FaInstagram" },
     { id: "soc6", platform: "Youtube", label: "Youtube", href: "https://www.youtube.com/@Thekundanvlog-v2q", iconKey: "FaYoutube" }
   ]
 };
+

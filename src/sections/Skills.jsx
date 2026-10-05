@@ -21,14 +21,14 @@ const SKILL_ICONS = {
 
 export default function Skills() {
   const { data } = usePortfolio();
-  const rawSkills = data.skills || [];
 
   const skills = useMemo(() => {
+    const rawSkills = data.skills || [];
     return rawSkills.map((s) => ({
       icon: SKILL_ICONS[s.iconKey] || <FaReact />,
       name: s.name
     }));
-  }, [rawSkills]);
+  }, [data?.skills]);
 
   const repeated = useMemo(() => {
     return skills.length > 0 ? [...skills, ...skills, ...skills, ...skills] : [];

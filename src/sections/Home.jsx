@@ -1,7 +1,5 @@
-import { useMemo } from "react";
-import ParticlesBackground from "../components/ParticlesBackground";
+import { useMemo, useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import React from "react";
 import { FaInstagram, FaFacebook, FaGithub, FaLinkedin, FaXTwitter, FaYoutube } from "react-icons/fa6";
 import avator from "../assets/avator.png";
 import { usePortfolio } from "../context/PortfolioContext";
@@ -30,25 +28,25 @@ export default function Home() {
   const hero = data.hero || {};
   const roles = useMemo(() => (hero.roles && hero.roles.length > 0 ? hero.roles : ["Web Developer"]), [hero.roles]);
 
-  const [index, setIndex] = React.useState(0);
-  const [subIndex, setSubIndex] = React.useState(0);
-  const [deleting, setDeleting] = React.useState(false);
+  const [index, setIndex] = useState(0);
+  const [subIndex, setSubIndex] = useState(0);
+  const [deleting, setDeleting] = useState(false);
 
-  React.useEffect(() => {
-    if (!roles[index]) {
-      setIndex(0);
-      return;
-    }
-    const current = roles[index];
+  useEffect(() => {
+    const current = roles[index] || roles[0] || "";
     const timeout = setTimeout(() => {
+      if (!roles[index]) {
+        setIndex(0);
+        return;
+      }
       if (!deleting && subIndex < current.length) setSubIndex(v => v + 1);
       else if (!deleting && subIndex === current.length) setTimeout(() => setDeleting(true), 1200);
       else if (deleting && subIndex > 0) setSubIndex(v => v - 1);
       else if (deleting && subIndex === 0) { setDeleting(false); setIndex(p => (p + 1) % roles.length); }
-    }, deleting ? 40 : 60)
+    }, deleting ? 40 : 60);
 
     return () => clearTimeout(timeout);
-  }, [subIndex, index, deleting, roles])
+  }, [subIndex, index, deleting, roles]);
 
   return (
     <section id="home" className="w-full min-h-screen relative bg-black overflow-hidden flex items-center">

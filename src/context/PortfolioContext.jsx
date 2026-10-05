@@ -16,6 +16,19 @@ const getStoredBackupPhoto = () => {
   }
 };
 
+const sanitizeSocials = (socialList) => {
+  if (!Array.isArray(socialList) || socialList.length === 0) return initialPortfolioData.socials;
+  return socialList.map((s) => {
+    if (s.href && s.href.includes("yourprofile")) {
+      const match = initialPortfolioData.socials.find(
+        (def) => def.platform?.toLowerCase() === s.platform?.toLowerCase() || def.id === s.id
+      );
+      return match ? { ...s, href: match.href } : s;
+    }
+    return s;
+  });
+};
+
 export function PortfolioProvider({ children }) {
   const [data, setData] = useState(() => {
     const backupPhoto = getStoredBackupPhoto();
@@ -34,11 +47,11 @@ export function PortfolioProvider({ children }) {
           ...parsed,
           hero: { ...initialPortfolioData.hero, ...(parsed.hero || {}) },
           about: { ...initialPortfolioData.about, ...parsedAbout, profileImage },
-          projects: Array.isArray(parsed.projects) ? parsed.projects : [],
+          projects: Array.isArray(parsed.projects) && parsed.projects.length > 0 ? parsed.projects : initialPortfolioData.projects,
           skills: Array.isArray(parsed.skills) && parsed.skills.length > 0 ? parsed.skills : initialPortfolioData.skills,
           experiences: Array.isArray(parsed.experiences) && parsed.experiences.length > 0 ? parsed.experiences : initialPortfolioData.experiences,
           testimonials: Array.isArray(parsed.testimonials) && parsed.testimonials.length > 0 ? parsed.testimonials : initialPortfolioData.testimonials,
-          socials: Array.isArray(parsed.socials) && parsed.socials.length > 0 ? parsed.socials : initialPortfolioData.socials,
+          socials: sanitizeSocials(parsed.socials),
           messages: Array.isArray(parsed.messages) ? parsed.messages : []
         };
       }
@@ -48,7 +61,8 @@ export function PortfolioProvider({ children }) {
     return {
       ...initialPortfolioData,
       about: { ...initialPortfolioData.about, profileImage: backupPhoto },
-      projects: [],
+      projects: initialPortfolioData.projects,
+      socials: initialPortfolioData.socials,
       messages: []
     };
   });
@@ -117,11 +131,11 @@ export function PortfolioProvider({ children }) {
                 ...remoteAbout,
                 profileImage: resolvedProfileImage
               },
-              projects: Array.isArray(remote.projects) ? remote.projects : prev.projects,
+              projects: Array.isArray(remote.projects) && remote.projects.length > 0 ? remote.projects : prev.projects,
               skills: Array.isArray(remote.skills) && remote.skills.length > 0 ? remote.skills : prev.skills,
               experiences: Array.isArray(remote.experiences) && remote.experiences.length > 0 ? remote.experiences : prev.experiences,
               testimonials: Array.isArray(remote.testimonials) && remote.testimonials.length > 0 ? remote.testimonials : prev.testimonials,
-              socials: Array.isArray(remote.socials) && remote.socials.length > 0 ? remote.socials : prev.socials,
+              socials: Array.isArray(remote.socials) && remote.socials.length > 0 ? sanitizeSocials(remote.socials) : sanitizeSocials(prev.socials),
               messages: Array.isArray(remote.messages) ? remote.messages : prev.messages
             };
 

@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import emailjs from "@emailjs/browser";
-import ParticlesBackground from "../components/ParticlesBackground";
 import Astra from "../assets/Astra.png";
 import { usePortfolio } from "../context/PortfolioContext";
 
