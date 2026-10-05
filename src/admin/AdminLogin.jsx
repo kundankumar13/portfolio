@@ -19,13 +19,34 @@ export default function AdminLogin() {
 
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [lockoutRemaining, setLockoutRemaining] = useState(0);
 
   const { login } = useAuth();
   const navigate = useNavigate();
 
+  React.useEffect(() => {
+    const checkLockout = () => {
+      try {
+        const lockoutUntil = parseInt(sessionStorage.getItem("kk_admin_lockout_until") || "0", 10);
+        const remaining = Math.max(0, Math.ceil((lockoutUntil - Date.now()) / 1000));
+        setLockoutRemaining(remaining);
+      } catch {
+        setLockoutRemaining(0);
+      }
+    };
+    checkLockout();
+    const interval = setInterval(checkLockout, 1000);
+    return () => clearInterval(interval);
+  }, []);
+
   const handleLoginSubmit = async (e) => {
     e.preventDefault();
     setError("");
+
+    if (lockoutRemaining > 0) {
+      setError(`Security Lockout: Too many failed attempts. Please wait ${Math.floor(lockoutRemaining / 60)}m ${lockoutRemaining % 60}s before retrying.`);
+      return;
+    }
 
     if (!username.trim() || !password) {
       setError("Please enter both Username and Password.");
@@ -36,11 +57,27 @@ export default function AdminLogin() {
     try {
       const res = await login(username, password, rememberMe);
       if (res.success) {
+        sessionStorage.removeItem("kk_admin_failed_attempts");
+        sessionStorage.removeItem("kk_admin_lockout_until");
         navigate("/kundan-secret-portal");
       } else {
-        setError(res.error || "Invalid Username or Password.");
+        let failed = 0;
+        try {
+          failed = parseInt(sessionStorage.getItem("kk_admin_failed_attempts") || "0", 10) + 1;
+          sessionStorage.setItem("kk_admin_failed_attempts", failed.toString());
+          if (failed >= 5) {
+            const lockUntil = Date.now() + 15 * 60 * 1000;
+            sessionStorage.setItem("kk_admin_lockout_until", lockUntil.toString());
+            setLockoutRemaining(15 * 60);
+            setError("Security Lockout: 5 failed attempts reached. Login locked for 15 minutes.");
+            return;
+          }
+        } catch {
+          // Ignore storage error
+        }
+        setError(`${res.error || "Invalid Username or Password."} (${5 - failed} attempts remaining)`);
       }
-    } catch (err) {
+    } catch {
       setError("An unexpected error occurred during login. Please try again.");
     } finally {
       setLoading(false);
