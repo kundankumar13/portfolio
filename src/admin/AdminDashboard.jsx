@@ -29,10 +29,16 @@ import {
   FaCodeBranch,
   FaArrowRotateRight,
   FaEnvelope,
-  FaFilePdf
+  FaFilePdf,
+  FaChartLine,
+  FaEye,
+  FaUsers
 } from "react-icons/fa6";
 import { downloadCV } from "../utils/downloadCV";
 import { compressImage } from "../utils/imageCompressor";
+import VisitorAnalyticsTab from "./VisitorAnalyticsTab";
+import { getVisitorAnalytics } from "../utils/visitorTracker";
+import { isGAConfigured } from "../utils/googleAnalytics";
 
 export default function AdminDashboard() {
   const {
@@ -133,6 +139,7 @@ export default function AdminDashboard() {
           <nav className="space-y-1.5">
             {[
               { id: "overview", label: "Overview", icon: FaChartPie },
+              { id: "analytics", label: "Visitor Analytics", icon: FaChartLine },
               { id: "messages", label: "Messages", icon: FaEnvelope, count: (data.messages || []).length },
               { id: "resume", label: "Resume / CV", icon: FaFilePdf, badge: data.hero?.resumeLink ? "Active" : null },
               { id: "hero", label: "Hero & Intro", icon: FaUserTie },
@@ -210,6 +217,12 @@ export default function AdminDashboard() {
             data={data}
             setActiveTab={setActiveTab}
             exportData={exportData}
+            triggerSaveNotification={triggerSaveNotification}
+          />
+        )}
+
+        {activeTab === "analytics" && (
+          <VisitorAnalyticsTab
             triggerSaveNotification={triggerSaveNotification}
           />
         )}
@@ -318,13 +331,70 @@ export default function AdminDashboard() {
 // 1. OVERVIEW TAB
 // ==========================================
 function OverviewTab({ data, setActiveTab, exportData, triggerSaveNotification }) {
+  const [visitorStats, setVisitorStats] = useState(null);
+
+  useEffect(() => {
+    let isMounted = true;
+    getVisitorAnalytics().then((stats) => {
+      if (isMounted) setVisitorStats(stats);
+    });
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  const totalViews = visitorStats?.totalViews || 0;
+  const uniqueVisitors = visitorStats?.uniqueVisitors || 0;
+  const todayViews = visitorStats?.todayViews || 0;
+  const gaActive = isGAConfigured();
+
   return (
     <div className="space-y-8">
       <div>
         <h1 className="text-3xl font-extrabold text-white tracking-tight">Dashboard Overview</h1>
         <p className="text-gray-400 text-sm mt-1">
-          Welcome, Kundan! Here is a summary of your portfolio's active content.
+          Welcome, Kundan! Here is a summary of your portfolio's active content and visitors.
         </p>
+      </div>
+
+      {/* Live Visitor Traffic Quick Banner */}
+      <div className="p-5 rounded-2xl bg-gradient-to-r from-[#00bf8f]/10 via-[#1cd8d2]/10 to-transparent border border-[#1cd8d2]/30 backdrop-blur-xl flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div className="flex items-center gap-3.5">
+          <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-[#00bf8f] to-[#1cd8d2] flex items-center justify-center text-black font-bold text-xl shadow-lg shadow-[#00bf8f]/20 shrink-0">
+            <FaEye />
+          </div>
+          <div>
+            <div className="flex items-center gap-2">
+              <h3 className="text-base font-bold text-white">Live Visitor Traffic</h3>
+              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+              <span className="text-[11px] text-emerald-400 font-semibold">Active</span>
+            </div>
+            <p className="text-xs text-gray-300 mt-0.5">
+              <strong className="text-white">{totalViews.toLocaleString()}</strong> total views •{" "}
+              <strong className="text-white">{uniqueVisitors.toLocaleString()}</strong> unique visitors •{" "}
+              <strong className="text-[#1cd8d2]">{todayViews.toLocaleString()}</strong> today
+            </p>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-3">
+          {gaActive ? (
+            <span className="text-[11px] font-semibold text-emerald-400 bg-emerald-500/10 px-2.5 py-1 rounded-lg border border-emerald-500/20 whitespace-nowrap">
+              ● GA4 Connected
+            </span>
+          ) : (
+            <span className="text-[11px] font-semibold text-amber-300 bg-amber-500/10 px-2.5 py-1 rounded-lg border border-amber-500/20 whitespace-nowrap">
+              ○ GA4 Ready
+            </span>
+          )}
+          <button
+            onClick={() => setActiveTab("analytics")}
+            className="px-4 py-2 text-xs font-bold rounded-xl bg-gradient-to-r from-[#00bf8f] to-[#1cd8d2] text-black hover:opacity-90 transition active:scale-95 flex items-center gap-1.5 cursor-pointer whitespace-nowrap"
+          >
+            <span>View Full Analytics</span>
+            <span>&rarr;</span>
+          </button>
+        </div>
       </div>
 
       {/* Stats Cards */}

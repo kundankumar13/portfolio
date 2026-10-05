@@ -21,9 +21,20 @@ import AdminDashboard from "./admin/AdminDashboard";
 
 import Lenis from "lenis";
 import "lenis/dist/lenis.css";
+import { initGA, trackGAPageView } from "./utils/googleAnalytics";
+import { recordVisitorHit } from "./utils/visitorTracker";
 
 function PortfolioHome() {
   const [introDone, setIntroDone] = React.useState(false);
+
+  React.useEffect(() => {
+    // 1. Initialize Google Analytics & track page visit
+    initGA();
+    trackGAPageView(window.location.pathname || "/");
+
+    // 2. Record visitor hit for Private Admin Dashboard Analytics
+    recordVisitorHit();
+  }, []);
 
   React.useEffect(() => {
     if (!introDone) return;
