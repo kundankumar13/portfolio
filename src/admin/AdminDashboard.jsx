@@ -32,7 +32,8 @@ import {
   FaFilePdf,
   FaChartLine,
   FaEye,
-  FaUsers
+  FaUsers,
+  FaAward
 } from "react-icons/fa6";
 import { downloadCV } from "../utils/downloadCV";
 import { compressImage } from "../utils/imageCompressor";
@@ -53,6 +54,9 @@ export default function AdminDashboard() {
     addExperience,
     updateExperience,
     deleteExperience,
+    addCertificate,
+    updateCertificate,
+    deleteCertificate,
     addTestimonial,
     updateTestimonial,
     deleteTestimonial,
@@ -147,6 +151,7 @@ export default function AdminDashboard() {
               { id: "projects", label: "Projects", icon: FaFolderTree, count: data.projects.length },
               { id: "skills", label: "Skills", icon: FaCode, count: data.skills.length },
               { id: "experience", label: "Experience", icon: FaBriefcase, count: data.experiences.length },
+              { id: "certificates", label: "Certificates", icon: FaAward, count: (data.certificates || []).length },
               { id: "testimonials", label: "Testimonials", icon: FaComments, count: data.testimonials.length },
               { id: "socials", label: "Social Links", icon: FaShareNodes, count: data.socials.length },
               { id: "security", label: "Security & Backup", icon: FaShieldHalved }
@@ -293,6 +298,16 @@ export default function AdminDashboard() {
           />
         )}
 
+        {activeTab === "certificates" && (
+          <CertificatesTab
+            certificates={data.certificates || []}
+            addCertificate={addCertificate}
+            updateCertificate={updateCertificate}
+            deleteCertificate={deleteCertificate}
+            triggerSaveNotification={triggerSaveNotification}
+          />
+        )}
+
         {activeTab === "testimonials" && (
           <TestimonialsTab
             testimonials={data.testimonials}
@@ -403,6 +418,7 @@ function OverviewTab({ data, setActiveTab, exportData, triggerSaveNotification }
           { label: "Active Projects", count: data.projects.length, tab: "projects", color: "from-blue-500/20 to-cyan-500/20 border-cyan-500/30 text-cyan-400" },
           { label: "Skills Listed", count: data.skills.length, tab: "skills", color: "from-emerald-500/20 to-teal-500/20 border-emerald-500/30 text-emerald-400" },
           { label: "Work Experience", count: data.experiences.length, tab: "experience", color: "from-purple-500/20 to-indigo-500/20 border-purple-500/30 text-purple-400" },
+          { label: "Certifications", count: (data.certificates || []).length, tab: "certificates", color: "from-teal-500/20 to-emerald-500/20 border-teal-500/30 text-teal-400" },
           { label: "Testimonials", count: data.testimonials.length, tab: "testimonials", color: "from-amber-500/20 to-orange-500/20 border-amber-500/30 text-amber-400" }
         ].map((item, idx) => (
           <div
@@ -2127,6 +2143,460 @@ function ExperienceTab({ experiences, addExperience, updateExperience, deleteExp
             </div>
           </div>
         ))}
+      </div>
+    </div>
+  );
+}
+
+// ==========================================
+// 6.5 CERTIFICATES TAB
+// ==========================================
+function CertificatesTab({
+  certificates,
+  addCertificate,
+  updateCertificate,
+  deleteCertificate,
+  triggerSaveNotification
+}) {
+  const [editingId, setEditingId] = useState(null);
+
+  const [title, setTitle] = useState("");
+  const [issuer, setIssuer] = useState("");
+  const [issueDate, setIssueDate] = useState("");
+  const [credentialId, setCredentialId] = useState("");
+  const [credentialUrl, setCredentialUrl] = useState("");
+  const [description, setDescription] = useState("");
+  const [skills, setSkills] = useState("");
+  const [image, setImage] = useState("");
+  const [isCompressing, setIsCompressing] = useState(false);
+
+  const startEdit = (cert) => {
+    setEditingId(cert.id);
+    setTitle(cert.title || "");
+    setIssuer(cert.issuer || "");
+    setIssueDate(cert.issueDate || "");
+    setCredentialId(cert.credentialId || "");
+    setCredentialUrl(cert.credentialUrl || "");
+    setDescription(cert.description || "");
+    setSkills(Array.isArray(cert.skills) ? cert.skills.join(", ") : cert.skills || "");
+    setImage(cert.image || "");
+
+    // Scroll form into view
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  const handleImageFile = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith("image/")) {
+      alert("Please select a valid image file (PNG, JPG, JPEG, WEBP).");
+      return;
+    }
+
+    setIsCompressing(true);
+    try {
+      // Auto-compress image to ~50KB web JPEG to prevent Firestore 1MB limits
+      const compressed = await compressImage(file, 900, 900, 0.85);
+      setImage(compressed);
+      triggerSaveNotification("Certificate image optimized and attached!");
+    } catch (err) {
+      console.error("Compression error:", err);
+      // Fallback to simple reader
+      const reader = new FileReader();
+      reader.onload = () => setImage(reader.result);
+      reader.readAsDataURL(file);
+    } finally {
+      setIsCompressing(false);
+    }
+  };
+
+  const handleSave = (e) => {
+    e.preventDefault();
+    if (!title.trim() || !issuer.trim()) {
+      alert("Please fill in both Certificate Title and Issuer.");
+      return;
+    }
+
+    const skillsArray = skills
+      .split(",")
+      .map((s) => s.trim())
+      .filter(Boolean);
+
+    const certPayload = {
+      title: title.trim(),
+      issuer: issuer.trim(),
+      issueDate: issueDate.trim(),
+      credentialId: credentialId.trim(),
+      credentialUrl: credentialUrl.trim(),
+      description: description.trim(),
+      skills: skillsArray,
+      image
+    };
+
+    if (editingId) {
+      updateCertificate(editingId, certPayload);
+      triggerSaveNotification("Certificate updated successfully!");
+      setEditingId(null);
+    } else {
+      addCertificate(certPayload);
+      triggerSaveNotification("New certificate added successfully!");
+    }
+
+    // Reset Form
+    setTitle("");
+    setIssuer("");
+    setIssueDate("");
+    setCredentialId("");
+    setCredentialUrl("");
+    setDescription("");
+    setSkills("");
+    setImage("");
+  };
+
+  const handleCancelEdit = () => {
+    setEditingId(null);
+    setTitle("");
+    setIssuer("");
+    setIssueDate("");
+    setCredentialId("");
+    setCredentialUrl("");
+    setDescription("");
+    setSkills("");
+    setImage("");
+  };
+
+  const handleDelete = (id, certTitle) => {
+    if (window.confirm(`Are you sure you want to delete "${certTitle}"?`)) {
+      deleteCertificate(id);
+      triggerSaveNotification("Certificate deleted!");
+      if (editingId === id) {
+        handleCancelEdit();
+      }
+    }
+  };
+
+  return (
+    <div className="space-y-6">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div>
+          <h1 className="text-2xl font-bold text-white flex items-center gap-2.5">
+            <FaAward className="text-[#1cd8d2]" />
+            <span>Certificates & Licenses Manager</span>
+          </h1>
+          <p className="text-gray-400 text-sm mt-1">
+            Add credentials, course certificates, digital badges, and official certifications.
+          </p>
+        </div>
+        <div className="text-xs px-3 py-1.5 rounded-full bg-white/5 border border-white/10 text-gray-300 self-start sm:self-auto">
+          Total: <strong className="text-[#1cd8d2]">{certificates.length}</strong> certificates
+        </div>
+      </div>
+
+      {/* ADD / EDIT CERTIFICATE FORM */}
+      <form
+        onSubmit={handleSave}
+        className="p-6 rounded-2xl bg-white/[0.04] border border-[#1cd8d2]/40 space-y-5 shadow-2xl backdrop-blur-xl"
+      >
+        <div className="flex items-center justify-between pb-3 border-b border-white/10">
+          <h3 className="font-bold text-white text-base flex items-center gap-2">
+            <span className="text-[#1cd8d2]">
+              {editingId ? <FaPenToSquare /> : <FaPlus />}
+            </span>
+            <span>{editingId ? "Edit Certificate" : "Add New Certificate"}</span>
+          </h3>
+          {editingId && (
+            <button
+              type="button"
+              onClick={handleCancelEdit}
+              className="text-xs text-rose-400 hover:text-rose-300 font-medium px-3 py-1 rounded-lg bg-rose-500/10 cursor-pointer"
+            >
+              Cancel Edit
+            </button>
+          )}
+        </div>
+
+        {/* Primary Inputs */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label className="block text-xs font-semibold uppercase text-gray-400 mb-1">
+              Certificate Title *
+            </label>
+            <input
+              type="text"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              placeholder="e.g. AWS Certified Cloud Practitioner"
+              className="w-full px-4 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white text-sm focus:outline-none focus:border-[#1cd8d2]"
+              required
+            />
+          </div>
+
+          <div>
+            <label className="block text-xs font-semibold uppercase text-gray-400 mb-1">
+              Issuing Organization / Authority *
+            </label>
+            <input
+              type="text"
+              value={issuer}
+              onChange={(e) => setIssuer(e.target.value)}
+              placeholder="e.g. Amazon Web Services (AWS), Meta, Google"
+              className="w-full px-4 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white text-sm focus:outline-none focus:border-[#1cd8d2]"
+              required
+            />
+          </div>
+        </div>
+
+        {/* Secondary Inputs */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div>
+            <label className="block text-xs font-semibold uppercase text-gray-400 mb-1">
+              Issue Date / Year
+            </label>
+            <input
+              type="text"
+              value={issueDate}
+              onChange={(e) => setIssueDate(e.target.value)}
+              placeholder="e.g. 2024 or Jan 2025"
+              className="w-full px-4 py-2 rounded-xl bg-white/5 border border-white/10 text-white text-sm focus:outline-none focus:border-[#1cd8d2]"
+            />
+          </div>
+
+          <div>
+            <label className="block text-xs font-semibold uppercase text-gray-400 mb-1">
+              Credential ID (Optional)
+            </label>
+            <input
+              type="text"
+              value={credentialId}
+              onChange={(e) => setCredentialId(e.target.value)}
+              placeholder="e.g. AWS-CCP-928174"
+              className="w-full px-4 py-2 rounded-xl bg-white/5 border border-white/10 text-white text-sm focus:outline-none focus:border-[#1cd8d2]"
+            />
+          </div>
+
+          <div>
+            <label className="block text-xs font-semibold uppercase text-gray-400 mb-1">
+              Verification Link (URL)
+            </label>
+            <input
+              type="url"
+              value={credentialUrl}
+              onChange={(e) => setCredentialUrl(e.target.value)}
+              placeholder="https://..."
+              className="w-full px-4 py-2 rounded-xl bg-white/5 border border-white/10 text-white text-sm focus:outline-none focus:border-[#1cd8d2]"
+            />
+          </div>
+        </div>
+
+        {/* Skills Tag Field */}
+        <div>
+          <label className="block text-xs font-semibold uppercase text-gray-400 mb-1">
+            Skills / Technologies Covered (Comma Separated)
+          </label>
+          <input
+            type="text"
+            value={skills}
+            onChange={(e) => setSkills(e.target.value)}
+            placeholder="e.g. React, JavaScript, Cloud Architecture, Security"
+            className="w-full px-4 py-2 rounded-xl bg-white/5 border border-white/10 text-white text-sm focus:outline-none focus:border-[#1cd8d2]"
+          />
+        </div>
+
+        {/* Description Field */}
+        <div>
+          <label className="block text-xs font-semibold uppercase text-gray-400 mb-1">
+            Description / Key Takeaways (Optional)
+          </label>
+          <textarea
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            rows={2}
+            placeholder="Brief summary of skills, syllabus covered, or project completed in this certificate..."
+            className="w-full px-4 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white text-sm focus:outline-none focus:border-[#1cd8d2]"
+          />
+        </div>
+
+        {/* Certificate Image Upload & Preview */}
+        <div className="p-4 rounded-xl bg-white/[0.02] border border-white/10 space-y-3">
+          <label className="block text-xs font-semibold uppercase text-gray-400">
+            Certificate Image / Screenshot (Auto-Compressed)
+          </label>
+
+          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+            <label className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-white/10 hover:bg-white/20 text-white text-xs font-semibold cursor-pointer transition border border-white/15">
+              <FaUpload className="text-[#1cd8d2]" />
+              <span>{isCompressing ? "Optimizing..." : "Upload Certificate Photo"}</span>
+              <input
+                type="file"
+                accept="image/*"
+                onChange={handleImageFile}
+                className="hidden"
+                disabled={isCompressing}
+              />
+            </label>
+
+            <span className="text-xs text-gray-500">or enter image URL:</span>
+
+            <input
+              type="text"
+              value={image}
+              onChange={(e) => setImage(e.target.value)}
+              placeholder="https://... or data URL"
+              className="flex-1 w-full px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-white text-xs focus:outline-none focus:border-[#1cd8d2]"
+            />
+          </div>
+
+          {/* Image Thumbnail Preview */}
+          {image && (
+            <div className="relative inline-block mt-2 rounded-xl overflow-hidden border border-[#1cd8d2]/40 bg-black max-w-xs shadow-md">
+              <img
+                src={image}
+                alt="Certificate preview"
+                className="w-full max-h-40 object-cover"
+              />
+              <button
+                type="button"
+                onClick={() => setImage("")}
+                className="absolute top-2 right-2 p-1.5 rounded-lg bg-black/80 text-rose-400 hover:text-white hover:bg-rose-600 transition cursor-pointer text-xs"
+                title="Remove image"
+              >
+                <FaTrash />
+              </button>
+            </div>
+          )}
+        </div>
+
+        {/* Save & Reset Buttons */}
+        <div className="flex items-center gap-3 pt-2">
+          <button
+            type="submit"
+            className="flex items-center gap-2 px-6 py-2.5 rounded-xl font-bold text-black bg-gradient-to-r from-[#00bf8f] to-[#1cd8d2] hover:opacity-90 transition active:scale-95 shadow-lg shadow-[#00bf8f]/20 cursor-pointer text-sm"
+          >
+            <FaFloppyDisk />
+            <span>{editingId ? "Update Certificate" : "Save Certificate"}</span>
+          </button>
+
+          {editingId && (
+            <button
+              type="button"
+              onClick={handleCancelEdit}
+              className="px-4 py-2.5 rounded-xl font-medium text-gray-400 hover:text-white bg-white/5 hover:bg-white/10 transition text-sm cursor-pointer"
+            >
+              Cancel
+            </button>
+          )}
+        </div>
+      </form>
+
+      {/* CERTIFICATES LIST */}
+      <div className="space-y-4">
+        <h3 className="text-lg font-bold text-white flex items-center justify-between">
+          <span>Active Certifications ({certificates.length})</span>
+          {certificates.length === 0 && (
+            <span className="text-xs text-amber-400 font-normal">No certificates added yet</span>
+          )}
+        </h3>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {certificates.map((cert) => {
+            const certSkills = Array.isArray(cert.skills)
+              ? cert.skills
+              : typeof cert.skills === "string" && cert.skills
+              ? cert.skills.split(",").map((s) => s.trim()).filter(Boolean)
+              : [];
+
+            return (
+              <div
+                key={cert.id}
+                className="p-5 rounded-2xl bg-white/[0.03] border border-white/10 hover:border-white/20 transition flex flex-col justify-between gap-4"
+              >
+                <div className="flex items-start gap-3.5">
+                  {cert.image ? (
+                    <img
+                      src={cert.image}
+                      alt={cert.title}
+                      className="w-16 h-16 rounded-xl object-cover border border-white/10 bg-black shrink-0"
+                    />
+                  ) : (
+                    <div className="w-16 h-16 rounded-xl bg-gradient-to-tr from-[#00bf8f]/20 to-[#1cd8d2]/20 border border-[#1cd8d2]/30 flex items-center justify-center text-[#1cd8d2] text-2xl shrink-0">
+                      <FaAward />
+                    </div>
+                  )}
+
+                  <div className="flex-1 min-w-0">
+                    <h4 className="text-base font-bold text-white truncate" title={cert.title}>
+                      {cert.title}
+                    </h4>
+                    <p className="text-xs text-[#1cd8d2] font-medium mt-0.5">{cert.issuer}</p>
+
+                    <div className="flex flex-wrap items-center gap-2 mt-1.5 text-[11px] text-gray-400">
+                      {cert.issueDate && <span>Issued: {cert.issueDate}</span>}
+                      {cert.credentialId && (
+                        <span className="font-mono bg-white/5 px-2 py-0.5 rounded text-gray-300">
+                          ID: {cert.credentialId}
+                        </span>
+                      )}
+                    </div>
+
+                    {cert.description && (
+                      <p className="text-xs text-gray-400 mt-2 line-clamp-2 leading-relaxed">
+                        {cert.description}
+                      </p>
+                    )}
+
+                    {certSkills.length > 0 && (
+                      <div className="flex flex-wrap gap-1 mt-2.5">
+                        {certSkills.map((sk, skI) => (
+                          <span
+                            key={skI}
+                            className="text-[10px] px-2 py-0.5 rounded-full bg-white/5 text-gray-300 border border-white/5"
+                          >
+                            {sk}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Card Action Buttons */}
+                <div className="flex items-center justify-between pt-3 border-t border-white/10 gap-2">
+                  <div className="flex items-center gap-2">
+                    {cert.credentialUrl && (
+                      <a
+                        href={cert.credentialUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-[#1cd8d2] bg-[#1cd8d2]/10 hover:bg-[#1cd8d2]/20 border border-[#1cd8d2]/20 transition"
+                      >
+                        <span>Verify</span>
+                        <FaArrowUpRightFromSquare className="text-[10px]" />
+                      </a>
+                    )}
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => startEdit(cert)}
+                      className="p-2 rounded-lg text-gray-300 hover:text-white bg-white/5 hover:bg-white/10 transition cursor-pointer"
+                      title="Edit Certificate"
+                    >
+                      <FaPenToSquare className="text-xs" />
+                    </button>
+                    <button
+                      onClick={() => handleDelete(cert.id, cert.title)}
+                      className="p-2 rounded-lg text-rose-400 hover:text-rose-300 bg-rose-500/10 hover:bg-rose-500/20 transition cursor-pointer"
+                      title="Delete Certificate"
+                    >
+                      <FaTrash className="text-xs" />
+                    </button>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
       </div>
     </div>
   );

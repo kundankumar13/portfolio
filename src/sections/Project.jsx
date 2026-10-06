@@ -1,5 +1,6 @@
 import { motion } from "framer-motion";
 import { usePortfolio } from "../context/PortfolioContext";
+import { FaFolderOpen } from "react-icons/fa6";
 
 export default function Projects() {
   const { data } = usePortfolio();
@@ -39,6 +40,23 @@ export default function Projects() {
             Explore my recent web applications, creative platforms, and scalable digital solutions.
           </motion.p>
         </div>
+
+        {/* Empty State when no projects exist */}
+        {projects.length === 0 && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="mt-14 max-w-md mx-auto p-8 rounded-2xl bg-white/[0.03] border border-white/10 backdrop-blur-xl text-center space-y-3"
+          >
+            <div className="w-14 h-14 rounded-2xl bg-gradient-to-tr from-[#1cd8d2]/20 to-[#00bf8f]/20 border border-[#1cd8d2]/30 flex items-center justify-center mx-auto text-[#1cd8d2] text-2xl">
+              <FaFolderOpen />
+            </div>
+            <h3 className="text-lg font-bold text-white">No Projects Added Yet</h3>
+            <p className="text-xs text-gray-400">
+              Projects added or fetched via GitHub in the Admin Portal will be beautifully displayed here.
+            </p>
+          </motion.div>
+        )}
 
         {/* Project Cards (only rendered if projects exist in data) */}
         {projects.length > 0 && (

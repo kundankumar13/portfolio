@@ -47,9 +47,14 @@ export function PortfolioProvider({ children }) {
           ...parsed,
           hero: { ...initialPortfolioData.hero, ...(parsed.hero || {}) },
           about: { ...initialPortfolioData.about, ...parsedAbout, profileImage },
-          projects: Array.isArray(parsed.projects) && parsed.projects.length > 0 ? parsed.projects : initialPortfolioData.projects,
+          projects: Array.isArray(parsed.projects)
+            ? parsed.projects.filter((p) => !["p1", "p2", "p3"].includes(p.id))
+            : [],
           skills: Array.isArray(parsed.skills) && parsed.skills.length > 0 ? parsed.skills : initialPortfolioData.skills,
           experiences: Array.isArray(parsed.experiences) && parsed.experiences.length > 0 ? parsed.experiences : initialPortfolioData.experiences,
+          certificates: Array.isArray(parsed.certificates)
+            ? parsed.certificates.filter((c) => !["cert1", "cert2", "cert3"].includes(c.id))
+            : [],
           testimonials: Array.isArray(parsed.testimonials) && parsed.testimonials.length > 0 ? parsed.testimonials : initialPortfolioData.testimonials,
           socials: sanitizeSocials(parsed.socials),
           messages: Array.isArray(parsed.messages) ? parsed.messages : []
@@ -61,7 +66,8 @@ export function PortfolioProvider({ children }) {
     return {
       ...initialPortfolioData,
       about: { ...initialPortfolioData.about, profileImage: backupPhoto },
-      projects: initialPortfolioData.projects,
+      projects: [],
+      certificates: [],
       socials: initialPortfolioData.socials,
       messages: []
     };
@@ -131,9 +137,14 @@ export function PortfolioProvider({ children }) {
                 ...remoteAbout,
                 profileImage: resolvedProfileImage
               },
-              projects: Array.isArray(remote.projects) && remote.projects.length > 0 ? remote.projects : prev.projects,
+              projects: Array.isArray(remote.projects)
+                ? remote.projects.filter((p) => !["p1", "p2", "p3"].includes(p.id))
+                : (Array.isArray(prev.projects) ? prev.projects.filter((p) => !["p1", "p2", "p3"].includes(p.id)) : []),
               skills: Array.isArray(remote.skills) && remote.skills.length > 0 ? remote.skills : prev.skills,
               experiences: Array.isArray(remote.experiences) && remote.experiences.length > 0 ? remote.experiences : prev.experiences,
+              certificates: Array.isArray(remote.certificates)
+                ? remote.certificates.filter((c) => !["cert1", "cert2", "cert3"].includes(c.id))
+                : (Array.isArray(prev.certificates) ? prev.certificates.filter((c) => !["cert1", "cert2", "cert3"].includes(c.id)) : []),
               testimonials: Array.isArray(remote.testimonials) && remote.testimonials.length > 0 ? remote.testimonials : prev.testimonials,
               socials: Array.isArray(remote.socials) && remote.socials.length > 0 ? sanitizeSocials(remote.socials) : sanitizeSocials(prev.socials),
               messages: Array.isArray(remote.messages) ? remote.messages : prev.messages
@@ -332,6 +343,52 @@ export function PortfolioProvider({ children }) {
     }));
   };
 
+  // Certificates
+  const addCertificate = (cert) => {
+    const newCert = {
+      id: "cert_" + Date.now(),
+      title: cert.title || "New Certificate",
+      issuer: cert.issuer || "Issuing Organization",
+      issueDate: cert.issueDate || "2025",
+      credentialId: cert.credentialId || "",
+      credentialUrl: cert.credentialUrl || "",
+      image: cert.image || "",
+      description: cert.description || "",
+      skills: Array.isArray(cert.skills)
+        ? cert.skills
+        : typeof cert.skills === "string"
+        ? cert.skills.split(",").map((s) => s.trim()).filter(Boolean)
+        : []
+    };
+    setData((prev) => ({
+      ...prev,
+      certificates: [newCert, ...(prev.certificates || [])]
+    }));
+  };
+
+  const updateCertificate = (id, updatedFields) => {
+    setData((prev) => ({
+      ...prev,
+      certificates: (prev.certificates || []).map((c) => {
+        if (c.id === id) {
+          const updated = { ...c, ...updatedFields };
+          if (typeof updated.skills === "string") {
+            updated.skills = updated.skills.split(",").map((s) => s.trim()).filter(Boolean);
+          }
+          return updated;
+        }
+        return c;
+      })
+    }));
+  };
+
+  const deleteCertificate = (id) => {
+    setData((prev) => ({
+      ...prev,
+      certificates: (prev.certificates || []).filter((c) => c.id !== id)
+    }));
+  };
+
   // Socials
   const updateSocial = (id, updatedFields) => {
     setData((prev) => ({
@@ -425,6 +482,9 @@ export function PortfolioProvider({ children }) {
         addTestimonial,
         updateTestimonial,
         deleteTestimonial,
+        addCertificate,
+        updateCertificate,
+        deleteCertificate,
         updateSocial,
         updateGithubUsername,
         addMessage,

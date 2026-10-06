@@ -11,6 +11,7 @@ import Footer from "./sections/Footer";
 import Home from "./sections/Home";
 import Project from "./sections/Project";
 import Skills from "./sections/Skills";
+import Certificates from "./sections/Certificates";
 import Testimonials from "./sections/Testimonials";
 
 import { PortfolioProvider } from "./context/PortfolioContext";
@@ -78,6 +79,7 @@ function PortfolioHome() {
           <Skills />
           <Project />
           <Experience />
+          <Certificates />
           <Testimonials />
           <Contact />
           <Footer />
