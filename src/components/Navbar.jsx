@@ -7,34 +7,18 @@ import { downloadCV } from "../utils/downloadCV";
 
 export default function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false);
-  const [visible, setVisible] = useState(true);
   const [scrolled, setScrolled] = useState(false);
-  const lastScrollY = useRef(0);
   const { data } = usePortfolio();
   const name = (data && data.hero && data.hero.name) || "Kundan Kumar";
   const resumeLink = data?.hero?.resumeLink;
 
   useEffect(() => {
     const handleScroll = () => {
-      const currentScrollY = window.scrollY;
-
-      if (currentScrollY > 20) {
+      if (window.scrollY > 20) {
         setScrolled(true);
       } else {
         setScrolled(false);
       }
-
-      if (currentScrollY < 10) {
-        setVisible(true);
-      } else if (currentScrollY > lastScrollY.current && currentScrollY - lastScrollY.current > 10) {
-        // Scrolling DOWN
-        setVisible(false);
-      } else if (lastScrollY.current - currentScrollY > 10) {
-        // Scrolling UP
-        setVisible(true);
-      }
-
-      lastScrollY.current = currentScrollY;
     };
 
     window.addEventListener("scroll", handleScroll, { passive: true });
@@ -61,11 +45,11 @@ export default function Navbar() {
   return (
     <>
       <nav
-        className={`fixed top-0 left-0 w-full flex items-center justify-between px-4 sm:px-6 py-4 z-50 transition-all duration-300 ${
+        className={`fixed top-0 left-0 w-full flex items-center justify-between px-4 sm:px-6 z-50 transition-all duration-300 ${
           scrolled
             ? "bg-black/70 backdrop-blur-md border-b border-white/10 py-3 shadow-lg"
             : "bg-transparent py-5"
-        } ${visible ? "translate-y-0" : "-translate-y-full"}`}
+        }`}
       >
         <div className="flex items-center space-x-2">
           <a
@@ -75,17 +59,6 @@ export default function Navbar() {
           >
             {name}
           </a>
-        </div>
-
-        {/* Center Menu on Desktop */}
-        <div className="hidden lg:block lg:absolute lg:left-1/2 lg:transform lg:-translate-x-1/2">
-          <button
-            onClick={() => setMenuOpen(true)}
-            className="text-white text-3xl p-2 rounded-lg hover:bg-white/10 transition-colors focus:outline-none cursor-pointer"
-            aria-label="Open menu"
-          >
-            <TfiMenu />
-          </button>
         </div>
 
         {/* Right Action Buttons */}
@@ -102,6 +75,7 @@ export default function Navbar() {
             </span>
           </button>
 
+          {/* Reach Out button */}
           <div className="hidden lg:block">
             <a
               href="#contact"
@@ -111,16 +85,14 @@ export default function Navbar() {
             </a>
           </div>
 
-          {/* Mobile Menu Button (Placed on right for natural thumb reach) */}
-          <div className="block lg:hidden">
-            <button
-              onClick={() => setMenuOpen(true)}
-              className="text-white text-2xl sm:text-3xl p-1.5 sm:p-2 rounded-lg hover:bg-white/10 transition-colors focus:outline-none cursor-pointer flex items-center justify-center"
-              aria-label="Open menu"
-            >
-              <TfiMenu />
-            </button>
-          </div>
+          {/* Hamburger Menu Button (Right Last) */}
+          <button
+            onClick={() => setMenuOpen(true)}
+            className="text-white text-2xl sm:text-3xl p-1.5 sm:p-2 rounded-lg hover:bg-white/10 transition-colors focus:outline-none cursor-pointer flex items-center justify-center"
+            aria-label="Open menu"
+          >
+            <TfiMenu />
+          </button>
         </div>
       </nav>
 
