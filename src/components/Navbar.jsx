@@ -51,13 +51,20 @@ export default function Navbar() {
             : "bg-transparent py-5"
         }`}
       >
-        <div className="flex items-center space-x-2">
+        <div className="flex items-center">
           <a
             href="#home"
             onClick={handleNameClick}
-            className="text-xl sm:text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-white via-gray-200 to-[#1cd8d2] hover:opacity-90 transition-opacity select-none cursor-pointer whitespace-nowrap"
+            className="flex items-center gap-2.5 sm:gap-3 group select-none cursor-pointer"
           >
-            {name}
+            <img
+              src="/profile-icon.jpg"
+              alt={name}
+              className="w-9 h-9 sm:w-10 sm:h-10 rounded-full object-cover group-hover:scale-105 transition-transform duration-300 shadow-md shrink-0"
+            />
+            <span className="text-xl sm:text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-white via-gray-200 to-[#1cd8d2] group-hover:opacity-90 transition-opacity whitespace-nowrap">
+              {name}
+            </span>
           </a>
         </div>
 
@@ -99,4 +106,4 @@ export default function Navbar() {
       <OverlayMenu isOpen={menuOpen} onClose={() => setMenuOpen(false)} />
     </>
   );
-}
+}
