@@ -33,7 +33,10 @@ import {
   FaChartLine,
   FaEye,
   FaUsers,
-  FaAward
+  FaAward,
+  FaBolt,
+  FaKey,
+  FaLock
 } from "react-icons/fa6";
 import { downloadCV } from "../utils/downloadCV";
 import { compressImage } from "../utils/imageCompressor";
@@ -1292,10 +1295,26 @@ function ProjectsTab({
 
   // GitHub integration state
   const [ghUser, setGhUser] = useState(githubUsername || "");
+  const [ghToken, setGhToken] = useState(() => {
+    try {
+      return localStorage.getItem("kundan_github_token") || "";
+    } catch {
+      return "";
+    }
+  });
+  const [showTokenInput, setShowTokenInput] = useState(false);
+  const [autoAddEnabled, setAutoAddEnabled] = useState(() => {
+    try {
+      return localStorage.getItem("kundan_auto_add_github_repos") === "true";
+    } catch {
+      return false;
+    }
+  });
   const [ghRepos, setGhRepos] = useState([]);
   const [ghLoading, setGhLoading] = useState(false);
   const [ghError, setGhError] = useState("");
   const [ghFilter, setGhFilter] = useState("new"); // "new" | "all"
+  const [lastFetchedAt, setLastFetchedAt] = useState(null);
 
   const ACCENT_COLORS = [
     "#0d4d3d",
@@ -1308,62 +1327,141 @@ function ProjectsTab({
     "#d97706"
   ];
 
-  // Auto-fetch if username already exists
-  useEffect(() => {
-    if (githubUsername && ghRepos.length === 0 && !ghLoading) {
-      fetchGithubRepos(githubUsername);
-    }
-  }, [githubUsername]);
-
-  const fetchGithubRepos = async (userToFetch) => {
-    const user = (userToFetch || ghUser).trim();
-    if (!user) {
-      setGhError("Please enter your GitHub username first.");
-      return;
-    }
-
-    setGhError("");
-    setGhLoading(true);
-
-    try {
-      const res = await fetch(`https://api.github.com/users/${user}/repos?sort=pushed&per_page=30`);
-      if (res.status === 404) {
-        setGhError(`GitHub user "${user}" was not found.`);
-        setGhRepos([]);
-      } else if (!res.ok) {
-        setGhError(`GitHub API error (${res.status}). Please try again later.`);
-        setGhRepos([]);
-      } else {
-        const data = await res.json();
-        // Sort by pushed_at descending
-        const sorted = data.sort((a, b) => new Date(b.pushed_at) - new Date(a.pushed_at));
-        setGhRepos(sorted);
-        if (updateGithubUsername) {
-          updateGithubUsername(user);
-        }
-        triggerSaveNotification(`Fetched ${sorted.length} repositories from GitHub!`);
-      }
-    } catch (err) {
-      setGhError("Network error while connecting to GitHub. Check your internet connection.");
-    } finally {
-      setGhLoading(false);
-    }
-  };
-
   // Helper to check if a repo is already in the portfolio
   const isRepoInPortfolio = (repo) => {
-    const cleanRepoName = repo.name.toLowerCase().replace(/[-_]/g, "");
+    if (!repo) return false;
+    const cleanRepoName = (repo.name || "").toLowerCase().replace(/[-_\s]/g, "");
+    const repoHtmlUrl = (repo.html_url || "").toLowerCase().replace(/\/$/, "");
+    const repoHomepage = (repo.homepage || "").toLowerCase().replace(/\/$/, "");
+
     return projects.some((p) => {
-      const cleanTitle = (p.title || "").toLowerCase().replace(/[-_]/g, "");
-      const linkMatch =
-        p.link &&
-        (p.link.toLowerCase().includes(repo.name.toLowerCase()) ||
-          (repo.homepage && p.link.toLowerCase() === repo.homepage.toLowerCase()));
-      return cleanTitle === cleanRepoName || linkMatch;
+      // 1. Direct ID match
+      if (p.githubRepoId && String(p.githubRepoId) === String(repo.id)) return true;
+
+      // 2. Exact link match
+      const pGithubUrl = (p.githubUrl || "").toLowerCase().replace(/\/$/, "");
+      if (pGithubUrl && pGithubUrl === repoHtmlUrl) return true;
+
+      const pLink = (p.link || "").toLowerCase().replace(/\/$/, "");
+      if (pLink && (pLink === repoHtmlUrl || (repoHomepage && pLink === repoHomepage))) return true;
+
+      // 3. Exact clean title match
+      const cleanTitle = (p.title || "").toLowerCase().replace(/[-_\s]/g, "");
+      if (cleanTitle && cleanRepoName && cleanTitle === cleanRepoName) return true;
+
+      return false;
     });
   };
 
-  // 1-Click Quick Add
+  const fetchGithubRepos = async (userToFetch, isBackground = false) => {
+    const user = (userToFetch || ghUser).trim();
+    if (!user) {
+      if (!isBackground) setGhError("Please enter your GitHub username first.");
+      return;
+    }
+
+    if (!isBackground) {
+      setGhError("");
+      setGhLoading(true);
+    }
+
+    try {
+      const headers = {
+        Accept: "application/vnd.github.v3+json"
+      };
+      const trimmedToken = ghToken.trim();
+      if (trimmedToken) {
+        headers.Authorization = `Bearer ${trimmedToken}`;
+      }
+
+      // If token provided, query /user/repos to get both public and private repos
+      const apiUrl = trimmedToken
+        ? `https://api.github.com/user/repos?sort=updated&per_page=100&affiliation=owner&_t=${Date.now()}`
+        : `https://api.github.com/users/${encodeURIComponent(user)}/repos?sort=updated&per_page=100&type=all&_t=${Date.now()}`;
+
+      const res = await fetch(apiUrl, {
+        headers,
+        cache: "no-store"
+      });
+
+      if (res.status === 404) {
+        setGhError(`GitHub user "${user}" was not found. Please verify the username.`);
+        setGhRepos([]);
+      } else if (res.status === 403) {
+        setGhError("GitHub API rate limit reached (60 req/hr). Please wait a few minutes or add a GitHub Personal Access Token.");
+        setGhRepos([]);
+      } else if (!res.ok) {
+        setGhError(`GitHub API error (${res.status}). Please check your connection or try again.`);
+        setGhRepos([]);
+      } else {
+        const rawData = await res.json();
+        if (Array.isArray(rawData)) {
+          // Sort by newest activity (pushed_at, updated_at, or created_at)
+          const sorted = rawData.sort((a, b) => {
+            const timeA = new Date(a.pushed_at || a.updated_at || a.created_at || 0).getTime();
+            const timeB = new Date(b.pushed_at || b.updated_at || b.created_at || 0).getTime();
+            return timeB - timeA;
+          });
+
+          setGhRepos(sorted);
+          setLastFetchedAt(new Date());
+          setGhError("");
+
+          if (updateGithubUsername) {
+            updateGithubUsername(user);
+          }
+
+          // Count newly uploaded repos
+          const unadded = sorted.filter((r) => !isRepoInPortfolio(r));
+
+          // If auto-add is enabled, automatically import new repositories
+          if (autoAddEnabled && unadded.length > 0) {
+            unadded.forEach((repo) => handleQuickAdd(repo));
+            triggerSaveNotification(`⚡ Auto-added ${unadded.length} new GitHub project(s) to your website!`);
+          } else if (isBackground && unadded.length > 0) {
+            triggerSaveNotification(`🔔 Found ${unadded.length} new repository on GitHub ready to add!`);
+          } else if (!isBackground) {
+            triggerSaveNotification(`Fetched ${sorted.length} repositories from GitHub! (${unadded.length} ready to add)`);
+          }
+        } else {
+          setGhRepos([]);
+        }
+      }
+    } catch (err) {
+      if (!isBackground) {
+        setGhError("Network error while connecting to GitHub. Check your internet connection.");
+      }
+    } finally {
+      if (!isBackground) {
+        setGhLoading(false);
+      }
+    }
+  };
+
+  // Auto-fetch on mount when username is available
+  useEffect(() => {
+    if (githubUsername) {
+      setGhUser(githubUsername);
+      fetchGithubRepos(githubUsername, false);
+    }
+  }, [githubUsername]);
+
+  // Window Focus Auto-Refresh:
+  // When user uploads a project to GitHub in another tab and returns to this website tab,
+  // automatically re-check GitHub in the background so the new project appears immediately!
+  useEffect(() => {
+    const handleFocus = () => {
+      const activeUser = ghUser || githubUsername;
+      if (activeUser && !ghLoading) {
+        fetchGithubRepos(activeUser, true);
+      }
+    };
+
+    window.addEventListener("focus", handleFocus);
+    return () => window.removeEventListener("focus", handleFocus);
+  }, [ghUser, githubUsername, autoAddEnabled, ghToken]);
+
+  // 1-Click Quick Add single repo
   const handleQuickAdd = (repo) => {
     const randomColor = ACCENT_COLORS[Math.floor(Math.random() * ACCENT_COLORS.length)];
     const newTitle = repo.name
@@ -1375,10 +1473,26 @@ function ProjectsTab({
       link: repo.homepage || repo.html_url,
       bgColor: randomColor,
       description: repo.description || "Created with " + (repo.language || "code"),
-      image: ""
+      image: "",
+      githubRepoId: repo.id,
+      githubUrl: repo.html_url,
+      language: repo.language || "",
+      stars: repo.stargazers_count || 0
     });
 
     triggerSaveNotification(`"${newTitle}" added to your live portfolio!`);
+  };
+
+  // 1-Click Add ALL unadded repos to portfolio
+  const handleAddAllNewRepos = () => {
+    const unaddedRepos = ghRepos.filter((r) => !isRepoInPortfolio(r));
+    if (unaddedRepos.length === 0) return;
+
+    unaddedRepos.forEach((repo) => {
+      handleQuickAdd(repo);
+    });
+
+    triggerSaveNotification(`🎉 Added all ${unaddedRepos.length} new repositories to your portfolio!`);
   };
 
   // Pre-fill form to customize before adding
@@ -1641,11 +1755,16 @@ function ProjectsTab({
               <FaGithub />
             </div>
             <div>
-              <h2 className="font-bold text-base text-white flex items-center gap-2">
+              <h2 className="font-bold text-base text-white flex items-center gap-2 flex-wrap">
                 <span>GitHub Auto-Sync</span>
                 {newRepoCount > 0 && (
                   <span className="px-2 py-0.5 rounded-full text-[11px] font-bold bg-[#1cd8d2]/20 text-[#1cd8d2] border border-[#1cd8d2]/30 animate-pulse">
                     {newRepoCount} New to Add
+                  </span>
+                )}
+                {autoAddEnabled && (
+                  <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 flex items-center gap-1">
+                    <FaBolt className="text-[10px] text-amber-400" /> Auto-Add Active
                   </span>
                 )}
               </h2>
@@ -1655,8 +1774,29 @@ function ProjectsTab({
             </div>
           </div>
 
-          {/* GitHub Username Input & Sync Button */}
-          <div className="flex items-center gap-2">
+          {/* GitHub Username Input, Auto-Add Toggle & Sync Button */}
+          <div className="flex flex-wrap items-center gap-2">
+            <button
+              type="button"
+              onClick={() => {
+                const nextVal = !autoAddEnabled;
+                setAutoAddEnabled(nextVal);
+                try {
+                  localStorage.setItem("kundan_auto_add_github_repos", String(nextVal));
+                } catch {}
+                triggerSaveNotification(nextVal ? "Auto-Add ON: New GitHub repos will automatically be added to website!" : "Auto-Add OFF.");
+              }}
+              className={`px-3 py-2 rounded-xl border text-xs font-semibold flex items-center gap-1.5 transition cursor-pointer ${
+                autoAddEnabled
+                  ? "bg-emerald-500/20 text-emerald-300 border-emerald-500/40"
+                  : "bg-white/5 text-gray-400 border-white/10 hover:text-white"
+              }`}
+              title="When ON, any newly uploaded repository will automatically be added to your website portfolio"
+            >
+              <FaBolt className={autoAddEnabled ? "text-amber-400" : "text-gray-500"} />
+              <span>{autoAddEnabled ? "Auto-Add: ON" : "Auto-Add: OFF"}</span>
+            </button>
+
             <div className="relative">
               <input
                 type="text"
@@ -1664,10 +1804,12 @@ function ProjectsTab({
                 onChange={(e) => setGhUser(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && fetchGithubRepos()}
                 placeholder="GitHub Username"
-                className="w-48 sm:w-56 px-3.5 py-2 rounded-xl bg-white/5 border border-white/10 text-white text-xs placeholder-gray-500 focus:outline-none focus:border-[#1cd8d2]"
+                className="w-40 sm:w-48 px-3.5 py-2 rounded-xl bg-white/5 border border-white/10 text-white text-xs placeholder-gray-500 focus:outline-none focus:border-[#1cd8d2]"
               />
             </div>
+
             <button
+              type="button"
               onClick={() => fetchGithubRepos()}
               disabled={ghLoading}
               className="px-4 py-2 rounded-xl bg-white/10 hover:bg-white/20 text-white font-semibold text-xs flex items-center gap-2 transition cursor-pointer disabled:opacity-50"
@@ -1677,6 +1819,79 @@ function ProjectsTab({
             </button>
           </div>
         </div>
+
+        {/* Optional GitHub Token Collapsible (for Private Repos) */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs text-gray-400 pt-1">
+          <div className="flex items-center gap-3">
+            <button
+              type="button"
+              onClick={() => setShowTokenInput(!showTokenInput)}
+              className="text-[11px] text-gray-400 hover:text-[#1cd8d2] flex items-center gap-1.5 transition cursor-pointer"
+            >
+              <FaKey className="text-[10px] text-amber-400" />
+              <span>{ghToken ? "GitHub Token Configured ✓" : "Add GitHub Token (Optional for Private Repos)"}</span>
+              <span className="text-[10px] text-gray-500">[{showTokenInput ? "Hide" : "Configure"}]</span>
+            </button>
+            {lastFetchedAt && (
+              <span className="text-[10px] text-gray-500 hidden sm:inline">
+                • Last checked: {lastFetchedAt.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+              </span>
+            )}
+          </div>
+          <span className="text-[10px] text-gray-500">
+            Auto-refreshes when you switch back to this tab
+          </span>
+        </div>
+
+        {showTokenInput && (
+          <div className="p-4 rounded-xl bg-white/[0.02] border border-white/10 space-y-2">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-semibold text-white flex items-center gap-1.5">
+                <FaLock className="text-xs text-amber-400" /> GitHub Personal Access Token (PAT)
+              </span>
+              {ghToken && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setGhToken("");
+                    try {
+                      localStorage.removeItem("kundan_github_token");
+                    } catch {}
+                    triggerSaveNotification("GitHub Token removed.");
+                  }}
+                  className="text-[10px] text-rose-400 hover:underline cursor-pointer"
+                >
+                  Clear Token
+                </button>
+              )}
+            </div>
+            <p className="text-[11px] text-gray-400 leading-relaxed">
+              If your repository on GitHub is <strong>Private</strong>, add a GitHub token (with <code>repo</code> scope) so it can be fetched and added. For public repositories, no token is needed.
+            </p>
+            <div className="flex items-center gap-2 pt-1">
+              <input
+                type="password"
+                value={ghToken}
+                onChange={(e) => setGhToken(e.target.value)}
+                placeholder="ghp_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+                className="flex-1 px-3.5 py-1.5 rounded-xl bg-white/5 border border-white/10 text-white text-xs placeholder-gray-600 focus:outline-none focus:border-[#1cd8d2]"
+              />
+              <button
+                type="button"
+                onClick={() => {
+                  try {
+                    localStorage.setItem("kundan_github_token", ghToken.trim());
+                  } catch {}
+                  triggerSaveNotification("GitHub Token saved!");
+                  fetchGithubRepos();
+                }}
+                className="px-3.5 py-1.5 rounded-xl bg-[#1cd8d2]/20 hover:bg-[#1cd8d2]/30 text-[#1cd8d2] font-semibold text-xs border border-[#1cd8d2]/40 transition cursor-pointer"
+              >
+                Save & Fetch
+              </button>
+            </div>
+          </div>
+        )}
 
         {/* Error message */}
         {ghError && (
@@ -1688,8 +1903,8 @@ function ProjectsTab({
         {/* Repositories fetched list */}
         {ghRepos.length > 0 && (
           <div className="space-y-4">
-            {/* Filter Tabs */}
-            <div className="flex items-center justify-between text-xs">
+            {/* Filter Tabs & Quick Action */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
               <div className="flex items-center gap-2">
                 <button
                   onClick={() => setGhFilter("new")}
@@ -1712,9 +1927,17 @@ function ProjectsTab({
                   All Repositories ({ghRepos.length})
                 </button>
               </div>
-              <span className="text-gray-500 hidden sm:inline">
-                Sorted by most recently pushed
-              </span>
+
+              {/* Add All Button */}
+              {newRepoCount > 0 && (
+                <button
+                  type="button"
+                  onClick={handleAddAllNewRepos}
+                  className="px-3.5 py-1.5 rounded-lg bg-gradient-to-r from-[#1cd8d2] to-[#00bf8f] text-black font-bold text-xs hover:opacity-90 transition flex items-center gap-1.5 cursor-pointer shadow-md self-start sm:self-auto"
+                >
+                  <FaPlus className="text-[10px]" /> Add All New Repos ({newRepoCount}) to Website
+                </button>
+              )}
             </div>
 
             {/* Repos Grid */}

@@ -237,13 +237,18 @@ export function PortfolioProvider({ children }) {
   // Projects
   const addProject = (project) => {
     const newProject = {
-      id: "p_" + Date.now(),
+      id: "p_" + Date.now() + "_" + Math.random().toString(36).substring(2, 6),
       title: project.title || "New Project",
       link: project.link || "#",
       bgColor: project.bgColor || "#0d4d3d",
       image: project.image || "",
       mobileImage: project.mobileImage || project.image || "",
-      description: project.description || ""
+      description: project.description || "",
+      githubRepoId: project.githubRepoId || null,
+      githubUrl: project.githubUrl || "",
+      language: project.language || "",
+      stars: project.stars || 0,
+      ...project
     };
     setData((prev) => ({
       ...prev,

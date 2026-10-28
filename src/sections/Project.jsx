@@ -1,6 +1,6 @@
 import { motion } from "framer-motion";
 import { usePortfolio } from "../context/PortfolioContext";
-import { FaFolderOpen } from "react-icons/fa6";
+import { FaFolderOpen, FaGithub, FaArrowUpRightFromSquare } from "react-icons/fa6";
 
 export default function Projects() {
   const { data } = usePortfolio();
@@ -100,21 +100,42 @@ export default function Projects() {
                   </div>
 
                   {/* Card Action Link */}
-                  <div className="mt-4 pt-3.5 border-t border-white/10 flex items-center justify-between">
-                    <a
-                      href={project.link || "#"}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg font-semibold text-xs text-white bg-gradient-to-r from-[#1cd8d2] via-[#00bf8f] to-[#302b63] shadow-md hover:scale-105 hover:shadow-[#1cd8d2]/20 transition-all cursor-pointer"
-                      aria-label={`View ${project.title}`}
-                    >
-                      <span>View Project</span>
-                      <span className="text-xs">↗</span>
-                    </a>
+                  <div className="mt-4 pt-3.5 border-t border-white/10 flex items-center justify-between gap-2">
+                    <div className="flex items-center gap-2">
+                      <a
+                        href={project.link || "#"}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg font-semibold text-xs text-white bg-gradient-to-r from-[#1cd8d2] via-[#00bf8f] to-[#302b63] shadow-md hover:scale-105 hover:shadow-[#1cd8d2]/20 transition-all cursor-pointer"
+                        aria-label={`View ${project.title}`}
+                      >
+                        <span>View Live</span>
+                        <FaArrowUpRightFromSquare className="text-[10px]" />
+                      </a>
 
-                    <span className="text-xs text-gray-500 font-mono">
-                      #{String(idx + 1).padStart(2, "0")}
-                    </span>
+                      {project.githubUrl && project.githubUrl !== project.link && (
+                        <a
+                          href={project.githubUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="p-2 rounded-lg bg-white/10 hover:bg-white/20 text-white transition hover:scale-105 text-xs flex items-center justify-center cursor-pointer"
+                          title="View Source on GitHub"
+                        >
+                          <FaGithub />
+                        </a>
+                      )}
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                      {project.language && (
+                        <span className="text-[10px] px-2 py-0.5 rounded-full bg-white/5 border border-white/10 text-[#1cd8d2] font-medium">
+                          {project.language}
+                        </span>
+                      )}
+                      <span className="text-xs text-gray-500 font-mono">
+                        #{String(idx + 1).padStart(2, "0")}
+                      </span>
+                    </div>
                   </div>
                 </div>
               </motion.div>
