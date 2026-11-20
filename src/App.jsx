@@ -80,7 +80,7 @@ function PortfolioHome() {
           <Project />
           <Experience />
           <Certificates />
-          <Testimonials />
+          {/* <Testimonials /> */}
           <Contact />
           <Footer />
         </div>
