@@ -36,7 +36,8 @@ import {
   FaAward,
   FaBolt,
   FaKey,
-  FaLock
+  FaLock,
+  FaVideo
 } from "react-icons/fa6";
 import { downloadCV } from "../utils/downloadCV";
 import { compressImage } from "../utils/imageCompressor";
@@ -65,6 +66,7 @@ export default function AdminDashboard() {
     deleteTestimonial,
     updateSocial,
     updateGithubUsername,
+    updateWelcomeVideo,
     deleteMessage,
     clearAllMessages,
     resetToDefault,
@@ -150,6 +152,7 @@ export default function AdminDashboard() {
               { id: "messages", label: "Messages", icon: FaEnvelope, count: (data.messages || []).length },
               { id: "resume", label: "Resume / CV", icon: FaFilePdf, badge: data.hero?.resumeLink ? "Active" : null },
               { id: "hero", label: "Hero & Intro", icon: FaUserTie },
+              { id: "welcomeVideo", label: "Intro Namaste Video", icon: FaVideo, badge: data.welcomeVideo && data.welcomeVideo !== "/welcome.mp4" ? "Active" : null },
               { id: "about", label: "About Me", icon: FaUserTie },
               { id: "projects", label: "Projects", icon: FaFolderTree, count: data.projects.length },
               { id: "skills", label: "Skills", icon: FaCode, count: data.skills.length },
@@ -256,6 +259,14 @@ export default function AdminDashboard() {
           <HeroTab
             hero={data.hero}
             updateHero={updateHero}
+            triggerSaveNotification={triggerSaveNotification}
+          />
+        )}
+
+        {activeTab === "welcomeVideo" && (
+          <WelcomeVideoTab
+            welcomeVideo={data.welcomeVideo}
+            updateWelcomeVideo={updateWelcomeVideo}
             triggerSaveNotification={triggerSaveNotification}
           />
         )}
@@ -3317,6 +3328,288 @@ function MessagesTab({ messages, deleteMessage, clearAllMessages, triggerSaveNot
           ))}
         </div>
       )}
+    </div>
+  );
+}
+
+// ==========================================
+// WELCOME VIDEO (INTRO) TAB
+// ==========================================
+function WelcomeVideoTab({ welcomeVideo, updateWelcomeVideo, triggerSaveNotification }) {
+  const [urlInput, setUrlInput] = useState(welcomeVideo || "");
+  const [isUploading, setIsUploading] = useState(false);
+  const [videoKey, setVideoKey] = useState(1);
+  const fileInputRef = useRef(null);
+
+  useEffect(() => {
+    setUrlInput(welcomeVideo || "");
+  }, [welcomeVideo]);
+
+  const handleFileUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith("video/")) {
+      alert("Kripya ek valid video file chunein (.mp4, .webm, .mov, etc.)");
+      return;
+    }
+
+    try {
+      setIsUploading(true);
+      await updateWelcomeVideo(file);
+      setVideoKey((prev) => prev + 1);
+      triggerSaveNotification("✨ Asli Namaste Video successfully save ho gaya!");
+    } catch (err) {
+      console.error("Upload error:", err);
+      alert("Video save karne me error aaya: " + err.message);
+    } finally {
+      setIsUploading(false);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    }
+  };
+
+  const handleSaveUrl = async (e) => {
+    e.preventDefault();
+    if (!urlInput.trim()) {
+      alert("Kripya video URL ya path enter karein.");
+      return;
+    }
+    try {
+      await updateWelcomeVideo(urlInput.trim());
+      setVideoKey((prev) => prev + 1);
+      triggerSaveNotification("✨ Video URL successfully update ho gaya!");
+    } catch (err) {
+      alert("Error: " + err.message);
+    }
+  };
+
+  const handleResetToDefault = async () => {
+    if (confirm("Kya aap default /welcome.mp4 par reset karna chahte hain?")) {
+      await updateWelcomeVideo("/welcome.mp4");
+      setUrlInput("/welcome.mp4");
+      setVideoKey((prev) => prev + 1);
+      triggerSaveNotification("Video default (/welcome.mp4) par reset ho gaya.");
+    }
+  };
+
+  const handleRemove = async () => {
+    if (confirm("Kya aap custom intro video hatana chahte hain?")) {
+      await updateWelcomeVideo("");
+      setUrlInput("");
+      setVideoKey((prev) => prev + 1);
+      triggerSaveNotification("Custom video hata diya gaya.");
+    }
+  };
+
+  const activeSrc = welcomeVideo || "/welcome.mp4";
+
+  return (
+    <div className="space-y-8">
+      {/* Tab Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <div className="flex items-center gap-2.5">
+            <h1 className="text-3xl font-extrabold text-white tracking-tight">Intro Namaste Video</h1>
+            <span className="text-xs px-2.5 py-0.5 rounded-full font-semibold bg-[#1cd8d2]/15 text-[#1cd8d2] border border-[#1cd8d2]/30">
+              Real Person Video
+            </span>
+          </div>
+          <p className="text-gray-400 text-sm mt-1">
+            Website khulte hi aapka khud ka 3-second ka video chal kar aayega aur haath jodkar Namaste karega!
+          </p>
+        </div>
+
+        <div className="flex items-center gap-2.5">
+          <button
+            type="button"
+            onClick={() => window.open("/", "_blank")}
+            className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white/10 hover:bg-white/15 text-white font-medium text-xs transition cursor-pointer"
+          >
+            <FaArrowUpRightFromSquare className="text-xs" />
+            <span>Live Website Preview</span>
+          </button>
+        </div>
+      </div>
+
+      {/* Recording Instructions Card */}
+      <div className="p-6 rounded-2xl bg-gradient-to-r from-[#1cd8d2]/10 via-[#00bf8f]/10 to-transparent border border-[#1cd8d2]/25 backdrop-blur-xl">
+        <h3 className="text-base font-bold text-white flex items-center gap-2 mb-3">
+          <span className="text-lg">🎬</span>
+          <span>Aapka Real Video Record Karne Ka Simple Guide:</span>
+        </h3>
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3.5 mt-2">
+          <div className="p-3.5 rounded-xl bg-black/40 border border-white/5">
+            <div className="text-emerald-400 font-bold text-xs mb-1">STEP 1 • Phone Setup</div>
+            <p className="text-xs text-gray-300 leading-relaxed">
+              Phone ko samne stable rakhein (dark ya clean background ke aage best dikhta hai).
+            </p>
+          </div>
+          <div className="p-3.5 rounded-xl bg-black/40 border border-white/5">
+            <div className="text-[#1cd8d2] font-bold text-xs mb-1">STEP 2 • Left Se Walk</div>
+            <p className="text-xs text-gray-300 leading-relaxed">
+              Camera ke left side se normal style me chal kar frame ke center me aayein.
+            </p>
+          </div>
+          <div className="p-3.5 rounded-xl bg-black/40 border border-white/5">
+            <div className="text-amber-300 font-bold text-xs mb-1">STEP 3 • Namaste (🙏)</div>
+            <p className="text-xs text-gray-300 leading-relaxed">
+              Center me ruk kar smile karein aur aadar ke sath dono haath jodkar Namaste karein.
+            </p>
+          </div>
+          <div className="p-3.5 rounded-xl bg-black/40 border border-white/5">
+            <div className="text-purple-300 font-bold text-xs mb-1">STEP 4 • Upload</div>
+            <p className="text-xs text-gray-300 leading-relaxed">
+              Sirf 3 se 5 second ka clip record karke neeche upload kar dein!
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* Two Column Grid: Upload / URL & Live Video Player */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+        
+        {/* Left: Video Upload & URL Settings (7 cols) */}
+        <div className="lg:col-span-7 space-y-6">
+          
+          {/* File Upload Box */}
+          <div className="p-6 rounded-2xl bg-black/40 border border-white/10 backdrop-blur-xl space-y-4">
+            <div className="flex items-center justify-between">
+              <h2 className="text-base font-bold text-white flex items-center gap-2">
+                <FaUpload className="text-[#1cd8d2]" />
+                <span>Upload Video From Mobile / PC</span>
+              </h2>
+              <span className="text-[11px] text-gray-400">MP4, WebM, MOV, MKV</span>
+            </div>
+
+            <p className="text-xs text-gray-400 leading-relaxed">
+              Aapne phone se jo video record kiya hai use seedha yahan choose karke upload karein. Ye automatic aapke browser database me safely store ho jata hai.
+            </p>
+
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="video/*"
+              onChange={handleFileUpload}
+              className="hidden"
+              id="video-upload-input"
+            />
+
+            <label
+              htmlFor="video-upload-input"
+              className={`flex flex-col items-center justify-center p-8 rounded-xl border-2 border-dashed border-[#1cd8d2]/40 hover:border-[#1cd8d2] bg-[#1cd8d2]/5 hover:bg-[#1cd8d2]/10 transition-all cursor-pointer text-center group ${
+                isUploading ? "opacity-50 pointer-events-none" : ""
+              }`}
+            >
+              <div className="w-12 h-12 rounded-xl bg-[#1cd8d2]/10 flex items-center justify-center text-[#1cd8d2] text-xl group-hover:scale-110 transition-transform mb-3">
+                <FaUpload />
+              </div>
+              <span className="text-sm font-semibold text-white">
+                {isUploading ? "Saving Video..." : "Click to Select Video File"}
+              </span>
+              <span className="text-xs text-gray-400 mt-1">
+                Recommend: 3-5 seconds, under 25MB for fastest loading
+              </span>
+            </label>
+          </div>
+
+          {/* Direct Video URL / Path Box */}
+          <div className="p-6 rounded-2xl bg-black/40 border border-white/10 backdrop-blur-xl space-y-4">
+            <h2 className="text-base font-bold text-white flex items-center gap-2">
+              <FaVideo className="text-[#1cd8d2]" />
+              <span>Or Use Video URL / Public Path</span>
+            </h2>
+            <p className="text-xs text-gray-400 leading-relaxed">
+              Agar aapne file <code>public/welcome.mp4</code> me rakhi hai ya kisi hosting (Cloudinary/Firebase) par upload ki hai toh direct link yahan daal sakte hain:
+            </p>
+
+            <form onSubmit={handleSaveUrl} className="flex gap-2.5">
+              <input
+                type="text"
+                value={urlInput}
+                onChange={(e) => setUrlInput(e.target.value)}
+                placeholder="/welcome.mp4 or https://..."
+                className="flex-1 px-4 py-2.5 rounded-xl bg-black/50 border border-white/10 text-white text-xs placeholder-gray-500 focus:outline-none focus:border-[#1cd8d2]"
+              />
+              <button
+                type="submit"
+                className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-[#1cd8d2] hover:bg-[#1cd8d2]/90 text-black font-bold text-xs transition cursor-pointer"
+              >
+                <FaFloppyDisk />
+                <span>Save</span>
+              </button>
+            </form>
+          </div>
+
+          {/* Quick Controls */}
+          <div className="p-4 rounded-xl bg-black/30 border border-white/5 flex flex-wrap items-center justify-between gap-3">
+            <div className="text-xs text-gray-400">
+              Active Source: <code className="text-[#1cd8d2]">{activeSrc}</code>
+            </div>
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={handleResetToDefault}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 text-xs text-gray-300 hover:text-white transition cursor-pointer"
+              >
+                <FaArrowRotateRight className="text-[10px]" />
+                <span>Reset Default</span>
+              </button>
+              <button
+                type="button"
+                onClick={handleRemove}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 text-xs text-rose-300 transition cursor-pointer"
+              >
+                <FaTrash className="text-[10px]" />
+                <span>Remove</span>
+              </button>
+            </div>
+          </div>
+
+        </div>
+
+        {/* Right: Live Video Player Preview (5 cols) */}
+        <div className="lg:col-span-5 space-y-4">
+          <div className="p-6 rounded-2xl bg-black/40 border border-white/10 backdrop-blur-xl flex flex-col items-center">
+            <div className="w-full flex items-center justify-between mb-4">
+              <h2 className="text-sm font-bold text-white flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                <span>Live Video Preview</span>
+              </h2>
+              <button
+                type="button"
+                onClick={() => setVideoKey((k) => k + 1)}
+                className="text-xs text-gray-400 hover:text-white flex items-center gap-1 px-2.5 py-1 rounded bg-white/5 hover:bg-white/10 transition cursor-pointer"
+                title="Reload Preview"
+              >
+                <FaArrowRotateRight className="text-[10px]" />
+                <span>Replay</span>
+              </button>
+            </div>
+
+            {/* Video Player Frame */}
+            <div className="relative w-full aspect-[4/3] rounded-2xl overflow-hidden border border-[#1cd8d2]/30 shadow-[0_0_35px_rgba(28,216,210,0.2)] bg-black/80 flex items-center justify-center">
+              <video
+                key={videoKey}
+                src={activeSrc}
+                autoPlay
+                muted
+                loop
+                playsInline
+                controls
+                className="w-full h-full object-contain"
+                onError={() => {
+                  console.warn("Preview video could not load from:", activeSrc);
+                }}
+              />
+            </div>
+
+            <p className="text-[11px] text-gray-400 text-center mt-3 leading-relaxed">
+              Ye video website open hote hi full-screen intro me play hoga aur iske theek baad glowing <strong className="text-white">WELCOME To Kundan Kumar's Portfolio ✨</strong> text aayega!
+            </p>
+          </div>
+        </div>
+
+      </div>
     </div>
   );
 }
