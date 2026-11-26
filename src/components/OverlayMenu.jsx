@@ -60,8 +60,20 @@ export default function OverlayMenu({ isOpen, onClose }) {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.9 }}
-              className="pt-3 sm:pt-4 flex flex-col items-center gap-3"
+              className="pt-3 sm:pt-4 flex flex-col items-center gap-3.5"
             >
+              <a
+                href="#contact"
+                onClick={onClose}
+                style={{
+                  background: "linear-gradient(90deg, rgba(28, 216, 210, 1) 0%, rgba(236, 72, 153, 1) 50%, rgba(48, 43, 99, 1) 100%)",
+                  boxShadow: "0 4px 20px rgba(236, 72, 153, 0.35)",
+                }}
+                className="inline-flex items-center justify-center text-sm sm:text-base font-semibold text-white px-7 py-2.5 sm:px-8 sm:py-3 rounded-full hover:scale-105 transition-all shadow-lg border border-white/10 cursor-pointer"
+              >
+                Reach Out
+              </a>
+
               <button
                 onClick={() => {
                   onClose();
