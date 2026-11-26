@@ -86,7 +86,11 @@ export default function Navbar() {
           <div className="hidden lg:block">
             <a
               href="#contact"
-              className="bg-gradient-to-r from-[#1cd8d2] via-[#00bf8f] to-[#302b63] text-white px-6 py-2 rounded-full text-sm font-medium shadow-lg hover:opacity-90 hover:scale-105 transition-all duration-300 inline-block"
+              style={{
+                background: "linear-gradient(90deg, rgba(28, 216, 210, 1) 0%, rgba(236, 72, 153, 1) 50%, rgba(48, 43, 99, 1) 100%)",
+                boxShadow: "0 4px 20px rgba(236, 72, 153, 0.35)",
+              }}
+              className="text-white px-6 py-2 rounded-full text-sm font-medium hover:opacity-95 hover:scale-105 hover:shadow-[0_4px_25px_rgba(236,72,153,0.55)] transition-all duration-300 inline-block border border-white/10"
             >
               Reach Out
             </a>
