@@ -5,7 +5,6 @@ import w2 from "../assets/w2.PNG";
 
 export const initialPortfolioData = {
   githubUsername: "kundankumar13",
-  welcomeVideo: "/welcome.mp4",
   hero: {
     name: "Kundan Kumar",
     roles: ["Web Developer", "AI Developer", "Software Developer"],

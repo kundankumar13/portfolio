@@ -2,7 +2,6 @@ import React, { createContext, useContext, useState, useEffect, useRef } from "r
 import { initialPortfolioData } from "../data/portfolioData";
 import { doc, getDoc, setDoc } from "firebase/firestore";
 import { db, isFirebaseConfigured } from "../firebase/config";
-import { getWelcomeVideo, saveWelcomeVideo, removeWelcomeVideo } from "../utils/videoStorage";
 
 const STORAGE_KEY = "kundan_portfolio_data_v2";
 const PHOTO_BACKUP_KEY = "kundan_custom_profile_image";
@@ -46,7 +45,6 @@ export function PortfolioProvider({ children }) {
         return {
           ...initialPortfolioData,
           ...parsed,
-          welcomeVideo: parsed.welcomeVideo || initialPortfolioData.welcomeVideo || "/welcome.mp4",
           hero: { ...initialPortfolioData.hero, ...(parsed.hero || {}) },
           about: { ...initialPortfolioData.about, ...parsedAbout, profileImage },
           projects: Array.isArray(parsed.projects)
@@ -67,7 +65,6 @@ export function PortfolioProvider({ children }) {
     }
     return {
       ...initialPortfolioData,
-      welcomeVideo: initialPortfolioData.welcomeVideo || "/welcome.mp4",
       about: { ...initialPortfolioData.about, profileImage: backupPhoto },
       projects: [],
       certificates: [],
@@ -77,19 +74,6 @@ export function PortfolioProvider({ children }) {
   });
 
   const isInitialRemoteFetchDone = useRef(false);
-
-  // Load persisted welcome video from IndexedDB on startup
-  useEffect(() => {
-    let isMounted = true;
-    getWelcomeVideo().then((stored) => {
-      if (stored && isMounted) {
-        setData((prev) => ({ ...prev, welcomeVideo: stored }));
-      }
-    });
-    return () => {
-      isMounted = false;
-    };
-  }, []);
 
   // Helper to persist changes to Firestore Cloud Database
   const syncToFirestore = async (updatedData) => {
@@ -248,36 +232,6 @@ export function PortfolioProvider({ children }) {
       ...prev,
       githubUsername: username
     }));
-  };
-
-  const updateWelcomeVideo = async (videoSrcOrFile) => {
-    try {
-      if (!videoSrcOrFile) {
-        await removeWelcomeVideo();
-        setData((prev) => ({
-          ...prev,
-          welcomeVideo: "/welcome.mp4"
-        }));
-        return;
-      }
-
-      if (typeof videoSrcOrFile === "string") {
-        await saveWelcomeVideo(videoSrcOrFile);
-        setData((prev) => ({
-          ...prev,
-          welcomeVideo: videoSrcOrFile
-        }));
-      } else if (videoSrcOrFile instanceof File || videoSrcOrFile instanceof Blob) {
-        await saveWelcomeVideo(videoSrcOrFile);
-        const objUrl = URL.createObjectURL(videoSrcOrFile);
-        setData((prev) => ({
-          ...prev,
-          welcomeVideo: objUrl
-        }));
-      }
-    } catch (err) {
-      console.error("[PortfolioContext] Failed to update welcome video:", err);
-    }
   };
 
   // Projects
@@ -538,7 +492,6 @@ export function PortfolioProvider({ children }) {
         deleteCertificate,
         updateSocial,
         updateGithubUsername,
-        updateWelcomeVideo,
         addMessage,
         deleteMessage,
         clearAllMessages,
