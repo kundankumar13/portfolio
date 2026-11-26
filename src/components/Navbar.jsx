@@ -51,29 +51,29 @@ export default function Navbar() {
             : "bg-transparent py-5"
         }`}
       >
-        <div className="flex items-center min-w-0">
+        <div className="flex items-center">
           <a
             href="#home"
             onClick={handleNameClick}
-            className="flex items-center gap-2 sm:gap-3 group select-none cursor-pointer min-w-0"
+            className="flex items-center gap-2.5 sm:gap-3 group select-none cursor-pointer"
           >
             <img
               src="/profile-icon.jpg"
               alt={name}
-              className="w-8 h-8 sm:w-10 sm:h-10 rounded-full object-cover group-hover:scale-105 transition-transform duration-300 shadow-md shrink-0"
+              className="w-9 h-9 sm:w-10 sm:h-10 rounded-full object-cover group-hover:scale-105 transition-transform duration-300 shadow-md shrink-0"
             />
-            <span className="text-base sm:text-xl md:text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-white via-gray-200 to-[#1cd8d2] group-hover:opacity-90 transition-opacity truncate">
+            <span className="text-xl sm:text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-white via-gray-200 to-[#1cd8d2] group-hover:opacity-90 transition-opacity whitespace-nowrap">
               {name}
             </span>
           </a>
         </div>
 
         {/* Right Action Buttons */}
-        <div className="flex items-center gap-1.5 sm:gap-3 shrink-0">
+        <div className="flex items-center gap-2 sm:gap-3">
           {/* Download CV button */}
           <button
             onClick={() => downloadCV(resumeLink, "Kundan_Kumar_CV")}
-            className="flex items-center gap-1.5 px-2.5 sm:px-4 py-1.5 rounded-full text-xs font-semibold bg-gradient-to-r from-[#1cd8d2]/20 to-[#00bf8f]/20 border border-[#1cd8d2]/50 text-white hover:border-[#1cd8d2] hover:scale-105 transition-all shadow-md cursor-pointer shrink-0"
+            className="flex items-center gap-1.5 px-2.5 sm:px-4 py-1.5 rounded-full text-xs font-semibold bg-gradient-to-r from-[#1cd8d2]/20 to-[#00bf8f]/20 border border-[#1cd8d2]/50 text-white hover:border-[#1cd8d2] hover:scale-105 transition-all shadow-md cursor-pointer"
             title="Download CV"
           >
             <FaDownload className="text-[#1cd8d2] text-xs" />
@@ -82,15 +82,11 @@ export default function Navbar() {
             </span>
           </button>
 
-          {/* Reach Out button - fully responsive on all screen sizes */}
-          <div className="flex items-center shrink-0">
+          {/* Reach Out button */}
+          <div className="hidden lg:block">
             <a
               href="#contact"
-              style={{
-                background: "linear-gradient(90deg, rgba(28, 216, 210, 1) 0%, rgba(236, 72, 153, 1) 50%, rgba(48, 43, 99, 1) 100%)",
-                boxShadow: "0 4px 18px rgba(236, 72, 153, 0.35)",
-              }}
-              className="text-white px-2.5 sm:px-4 md:px-6 py-1.5 sm:py-2 rounded-full text-[11px] sm:text-xs md:text-sm font-semibold hover:opacity-95 hover:scale-105 hover:shadow-[0_4px_25px_rgba(236,72,153,0.55)] transition-all duration-300 inline-flex items-center justify-center whitespace-nowrap border border-white/10"
+              className="bg-gradient-to-r from-[#1cd8d2] via-[#00bf8f] to-[#302b63] text-white px-6 py-2 rounded-full text-sm font-medium shadow-lg hover:opacity-90 hover:scale-105 transition-all duration-300 inline-block"
             >
               Reach Out
             </a>
@@ -99,7 +95,7 @@ export default function Navbar() {
           {/* Hamburger Menu Button (Right Last) */}
           <button
             onClick={() => setMenuOpen(true)}
-            className="text-white text-xl sm:text-2xl md:text-3xl p-1.5 sm:p-2 rounded-lg hover:bg-white/10 transition-colors focus:outline-none cursor-pointer flex items-center justify-center shrink-0"
+            className="text-white text-2xl sm:text-3xl p-1.5 sm:p-2 rounded-lg hover:bg-white/10 transition-colors focus:outline-none cursor-pointer flex items-center justify-center"
             aria-label="Open menu"
           >
             <TfiMenu />
