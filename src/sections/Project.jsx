@@ -1,6 +1,7 @@
 import { motion } from "framer-motion";
 import { usePortfolio } from "../context/PortfolioContext";
 import { FaFolderOpen, FaGithub, FaArrowUpRightFromSquare } from "react-icons/fa6";
+import { sanitizeUrl } from "../utils/sanitizeUrl";
 
 export default function Projects() {
   const { data } = usePortfolio();
@@ -103,7 +104,7 @@ export default function Projects() {
                   <div className="mt-4 pt-3.5 border-t border-white/10 flex items-center justify-between gap-2">
                     <div className="flex items-center gap-2">
                       <a
-                        href={project.link || "#"}
+                        href={sanitizeUrl(project.link)}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg font-semibold text-xs text-white bg-gradient-to-r from-[#1cd8d2] via-[#00bf8f] to-[#302b63] shadow-md hover:scale-105 hover:shadow-[#1cd8d2]/20 transition-all cursor-pointer"
@@ -115,7 +116,7 @@ export default function Projects() {
 
                       {project.githubUrl && project.githubUrl !== project.link && (
                         <a
-                          href={project.githubUrl}
+                          href={sanitizeUrl(project.githubUrl)}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="p-2 rounded-lg bg-white/10 hover:bg-white/20 text-white transition hover:scale-105 text-xs flex items-center justify-center cursor-pointer"

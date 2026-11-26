@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, useRef } from "react";
 import { initialPortfolioData } from "../data/portfolioData";
-import { doc, getDoc, setDoc } from "firebase/firestore";
+import { doc, getDoc, setDoc, collection, getDocs, deleteDoc } from "firebase/firestore";
 import { db, isFirebaseConfigured } from "../firebase/config";
 
 const STORAGE_KEY = "kundan_portfolio_data_v2";
@@ -80,20 +80,22 @@ export function PortfolioProvider({ children }) {
     if (!isFirebaseConfigured || !db) return;
     try {
       const docRef = doc(db, "portfolio_data", "main");
-      const jsonStr = JSON.stringify(updatedData);
+      // Exclude messages from portfolio_data/main (messages live securely in their own collection)
+      const { messages, ...dataToSync } = updatedData;
+      const jsonStr = JSON.stringify(dataToSync);
       // Safeguard against Firestore 1MB document limit
       if (jsonStr.length > 950000) {
         console.warn("[Portfolio] Payload approaches 1MB limit. Syncing safe subset.");
         const safeData = {
-          ...updatedData,
+          ...dataToSync,
           hero: {
-            ...updatedData.hero,
-            resumeLink: updatedData.hero?.resumeLink?.startsWith("data:") ? "" : updatedData.hero?.resumeLink
+            ...dataToSync.hero,
+            resumeLink: dataToSync.hero?.resumeLink?.startsWith("data:") ? "" : dataToSync.hero?.resumeLink
           }
         };
         await setDoc(docRef, safeData, { merge: true });
       } else {
-        await setDoc(docRef, updatedData, { merge: true });
+        await setDoc(docRef, dataToSync, { merge: true });
       }
     } catch (err) {
       console.warn("[Portfolio] Failed to sync to Firestore:", err);
@@ -161,6 +163,30 @@ export function PortfolioProvider({ children }) {
 
             return merged;
           });
+        }
+
+        // Fetch cloud messages if accessible (Admin authenticated)
+        try {
+          const msgColl = collection(db, "messages");
+          const msgSnap = await getDocs(msgColl);
+          if (!msgSnap.empty && isMounted) {
+            const remoteMsgs = [];
+            msgSnap.forEach((d) => remoteMsgs.push({ id: d.id, ...d.data() }));
+            remoteMsgs.sort((a, b) => new Date(b.date || 0) - new Date(a.date || 0));
+            setData((prev) => {
+              const map = new Map();
+              remoteMsgs.forEach((m) => map.set(m.id, m));
+              (prev.messages || []).forEach((m) => {
+                if (!map.has(m.id)) map.set(m.id, m);
+              });
+              return {
+                ...prev,
+                messages: Array.from(map.values())
+              };
+            });
+          }
+        } catch {
+          // Visitors cannot read /messages; handled silently by rules
         }
       } catch (err) {
         console.warn("[Portfolio] Remote Firestore fetch failed:", err);
@@ -403,9 +429,9 @@ export function PortfolioProvider({ children }) {
   };
 
   // Messages from Contact Form
-  const addMessage = (msg) => {
+  const addMessage = async (msg) => {
     const newMsg = {
-      id: "msg_" + Date.now(),
+      id: "msg_" + Date.now() + "_" + Math.random().toString(36).substring(2, 6),
       name: msg.name || "Anonymous",
       email: msg.email || "",
       service: msg.service || "General Inquiry",
@@ -413,25 +439,55 @@ export function PortfolioProvider({ children }) {
       message: msg.message || msg.idea || "",
       date: new Date().toISOString()
     };
+
     setData((prev) => ({
       ...prev,
       messages: [newMsg, ...(prev.messages || [])]
     }));
+
+    // Save directly to Cloud Firestore 'messages' collection
+    if (isFirebaseConfigured && db) {
+      try {
+        const msgDocRef = doc(db, "messages", newMsg.id);
+        await setDoc(msgDocRef, newMsg);
+      } catch (err) {
+        console.warn("[Portfolio] Cloud message save fallback to local:", err);
+      }
+    }
+
     return newMsg;
   };
 
-  const deleteMessage = (id) => {
+  const deleteMessage = async (id) => {
     setData((prev) => ({
       ...prev,
       messages: (prev.messages || []).filter((m) => m.id !== id)
     }));
+
+    if (isFirebaseConfigured && db) {
+      try {
+        const msgDocRef = doc(db, "messages", id);
+        await deleteDoc(msgDocRef);
+      } catch (err) {
+        console.warn("[Portfolio] Cloud message delete error:", err);
+      }
+    }
   };
 
-  const clearAllMessages = () => {
+  const clearAllMessages = async () => {
+    const currentIds = (data.messages || []).map((m) => m.id);
     setData((prev) => ({
       ...prev,
       messages: []
     }));
+
+    if (isFirebaseConfigured && db && currentIds.length > 0) {
+      try {
+        await Promise.allSettled(currentIds.map((id) => deleteDoc(doc(db, "messages", id))));
+      } catch (err) {
+        console.warn("[Portfolio] Cloud clear messages error:", err);
+      }
+    }
   };
 
   // Reset to default

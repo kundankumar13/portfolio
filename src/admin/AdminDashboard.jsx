@@ -1866,7 +1866,7 @@ function ProjectsTab({
               )}
             </div>
             <p className="text-[11px] text-gray-400 leading-relaxed">
-              If your repository on GitHub is <strong>Private</strong>, add a GitHub token (with <code>repo</code> scope) so it can be fetched and added. For public repositories, no token is needed.
+              If your repository on GitHub is <strong>Private</strong>, add a GitHub token (Fine-Grained Read-Only token recommended). For public repositories, no token is needed.
             </p>
             <div className="flex items-center gap-2 pt-1">
               <input
@@ -1890,6 +1890,9 @@ function ProjectsTab({
                 Save & Fetch
               </button>
             </div>
+            <p className="text-[10px] text-amber-300/80 mt-1">
+              🔒 Security Tip: Use only Fine-Grained Personal Access Tokens with Read-Only access. Never use tokens with write or admin permissions.
+            </p>
           </div>
         )}
 

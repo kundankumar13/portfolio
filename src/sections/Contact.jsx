@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import emailjs from "@emailjs/browser";
 import Astra from "../assets/Astra.png";
@@ -17,17 +17,40 @@ export default function Contact() {
     email: "",
     service: "",
     budget: "",
-    idea: ""
+    idea: "",
+    website_hp: "" // Honeypot field for bot trap
   });
 
   const [errors, setErrors] = useState({});
   const [status, setStatus] = useState("");
+  const [cooldownRemaining, setCooldownRemaining] = useState(0);
+
+  // Check rate limit cooldown on mount and tick
+  useEffect(() => {
+    const checkCooldown = () => {
+      try {
+        const lastSent = parseInt(sessionStorage.getItem("kk_contact_cooldown") || "0", 10);
+        const remaining = Math.max(0, Math.ceil((lastSent + 45000 - Date.now()) / 1000));
+        setCooldownRemaining(remaining);
+      } catch {
+        setCooldownRemaining(0);
+      }
+    };
+    checkCooldown();
+    const interval = setInterval(checkCooldown, 1000);
+    return () => clearInterval(interval);
+  }, []);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
     
     // Allow numbers, $, commas, k, and dashes in budget
     if (name === "budget" && value && !/^[\d$,\s.kK+-]+$/.test(value)) return;
+
+    // Length safety clamps
+    if (name === "name" && value.length > 100) return;
+    if (name === "email" && value.length > 120) return;
+    if (name === "idea" && value.length > 2500) return;
 
     setFormData((prev) => ({ ...prev, [name]: value }));
     
@@ -57,6 +80,20 @@ export default function Contact() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    // 1. Anti-Bot Honeypot trap: If filled by automated bot script, silently fake success
+    if (formData.website_hp && formData.website_hp.trim() !== "") {
+      console.warn("[Security] Automated bot submission trapped via honeypot.");
+      setStatus("success");
+      return;
+    }
+
+    // 2. Cooldown check to prevent EmailJS quota exhaustion
+    if (cooldownRemaining > 0) {
+      alert(`Please wait ${cooldownRemaining}s before sending another message.`);
+      return;
+    }
+
     if (!validateForm()) return;
     setStatus("sending");
 
@@ -68,15 +105,19 @@ export default function Contact() {
       message: formData.idea.trim(),
     };
 
-    // 1. Immediately save to Admin Panel inbox
+    // 1. Immediately save to Admin Panel inbox and Cloud Database
     if (addMessage) {
-      addMessage({
-        name: formData.name.trim(),
-        email: formData.email.trim(),
-        service: formData.service,
-        budget: formData.budget.trim() || "N/A",
-        message: formData.idea.trim()
-      });
+      try {
+        await addMessage({
+          name: formData.name.trim(),
+          email: formData.email.trim(),
+          service: formData.service,
+          budget: formData.budget.trim() || "N/A",
+          message: formData.idea.trim()
+        });
+      } catch (err) {
+        console.warn("[Contact] Local message buffer saved:", err);
+      }
     }
 
     // 2. Attempt sending via EmailJS
@@ -91,12 +132,19 @@ export default function Contact() {
       setStatus("success");
     }
 
+    // Activate 45-second rate limit cooldown
+    try {
+      sessionStorage.setItem("kk_contact_cooldown", Date.now().toString());
+      setCooldownRemaining(45);
+    } catch {}
+
     setFormData({
       name: "",
       email: "",
       service: "",
       budget: "",
       idea: "",
+      website_hp: ""
     });
   };
 
@@ -155,6 +203,18 @@ export default function Contact() {
           </motion.p>
           
           <form className="flex flex-col gap-4 sm:gap-5" onSubmit={handleSubmit} noValidate>
+            
+            {/* Anti-bot honeypot field - invisible to genuine users */}
+            <div className="opacity-0 pointer-events-none absolute -left-[9999px]" aria-hidden="true">
+              <input
+                type="text"
+                name="website_hp"
+                value={formData.website_hp}
+                onChange={handleChange}
+                tabIndex="-1"
+                autoComplete="off"
+              />
+            </div>
             
             {/* Name Input */}
             <div className="flex flex-col gap-1">
@@ -248,12 +308,16 @@ export default function Contact() {
             {/* Action Button */}
             <motion.button 
               className="bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white py-2.5 sm:py-3 text-xs sm:text-sm md:text-base rounded-md font-semibold transition mt-2 shadow-md disabled:cursor-not-allowed cursor-pointer"
-              whileHover={status !== "sending" ? { scale: 1.02 } : {}}
-              whileTap={status !== "sending" ? { scale: 0.98 } : {}}
-              disabled={status === "sending"}
+              whileHover={status !== "sending" && cooldownRemaining === 0 ? { scale: 1.02 } : {}}
+              whileTap={status !== "sending" && cooldownRemaining === 0 ? { scale: 0.98 } : {}}
+              disabled={status === "sending" || cooldownRemaining > 0}
               type="submit"
             >
-              {status === "sending" ? "Sending..." : "Send Message"}
+              {status === "sending"
+                ? "Sending..."
+                : cooldownRemaining > 0
+                ? `Please wait ${cooldownRemaining}s...`
+                : "Send Message"}
             </motion.button>
           </form>
         </motion.div>
